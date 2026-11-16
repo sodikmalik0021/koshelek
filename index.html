@@ -272,6 +272,101 @@ nav.bottom .badge { background: var(--pink); }
 .tip { margin-top: 18px; }
 .item .btns { margin-top: 8px; }
 
+/* ================= v2: аватарки, быстрые кнопки, отсчёт, чат ================= */
+.me-box { display: flex; align-items: center; gap: 10px; }
+.ava { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
+  color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 3px 8px rgba(91,43,217,.22); }
+.ava.md { width: 38px; height: 38px; font-size: 16px; }
+.ava.sm { width: 30px; height: 30px; font-size: 13px; box-shadow: none; }
+.ava.xs { width: 20px; height: 20px; font-size: 11px; box-shadow: none; margin-right: 6px; }
+.ava.c0 { background: linear-gradient(135deg, #6a2cf0, #9b35e0); }
+.ava.c1 { background: linear-gradient(135deg, #ff3d8b, #ff7a59); }
+.ava.c2 { background: linear-gradient(135deg, #12c2e9, #3b82f6); }
+.ava.c3 { background: linear-gradient(135deg, #0a9b62, #2fd3a0); }
+.item.member { display: flex; gap: 12px; align-items: flex-start; }
+.item.member > .ava { margin-top: 1px; }
+.grow { flex: 1; min-width: 0; }
+.bar.thin { height: 6px; margin-top: 9px; background: #efe9ff; }
+.asker { display: flex; align-items: center; flex-wrap: wrap; }
+.badge[hidden], .qb[hidden] { display: none !important; }
+
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0 2px; }
+.quick button { border: 0; background: #fff; border-radius: 18px; padding: 12px 2px 10px; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 600; color: var(--lake-deep); box-shadow: 0 4px 14px rgba(91,43,217,.10); cursor: pointer; transition: transform .12s ease; }
+.quick button:active { transform: scale(.94); }
+.quick .qi { position: relative; width: 44px; height: 44px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #efe7ff, #e4dafc); color: var(--violet); }
+.quick button:nth-child(2) .qi { background: linear-gradient(135deg, #ffe3ef, #ffd6e4); color: var(--pink); }
+.quick button:nth-child(3) .qi { background: linear-gradient(135deg, #dff6fd, #d3ecff); color: #1593c4; }
+.quick button:nth-child(4) .qi { background: linear-gradient(135deg, #dcf7ea, #ccf2e2); color: var(--good); }
+.quick svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.qb { position: absolute; top: -6px; right: -9px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px; background: var(--pink);
+  color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+
+.countdown { display: block; width: 100%; border: 0; text-align: left; cursor: pointer; color: #fff; border-radius: 22px; padding: 16px 16px 14px;
+  margin-bottom: 10px; position: relative; overflow: hidden; font: inherit;
+  background: linear-gradient(135deg, #2a1470 0%, #5b2bd9 55%, #8b3df0 100%); box-shadow: 0 12px 26px rgba(91,43,217,.30); }
+.countdown::after { content: ""; position: absolute; right: -50px; top: -60px; width: 170px; height: 170px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.20), transparent 70%); pointer-events: none; }
+.countdown.soon { background: linear-gradient(135deg, #b5134f 0%, #ff3d8b 55%, #ff8a3d 100%); box-shadow: 0 12px 26px rgba(255,61,139,.32); }
+.countdown.late { background: linear-gradient(135deg, #7d0b33 0%, #e0245e 60%, #ff5a7a 100%); box-shadow: 0 12px 26px rgba(224,36,94,.30); }
+.countdown.paid { background: linear-gradient(135deg, #064e3b 0%, #0a9b62 55%, #12c2a0 100%); box-shadow: 0 12px 26px rgba(10,155,98,.28); }
+.countdown > span { display: block; position: relative; z-index: 1; }
+.cd-head { display: flex !important; justify-content: space-between; gap: 10px; font-size: 14px; }
+.cd-head > span:first-child { opacity: .9; }
+.cd-date { font-weight: 700; }
+.cd-digits { display: flex !important; align-items: flex-start; gap: 4px; margin: 12px 0; }
+.cd-digits i { font-style: normal; font-size: 24px; font-weight: 800; opacity: .55; padding-top: 8px; }
+.cd-cell { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.cd-cell b { display: block; width: 100%; text-align: center; font: 800 32px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums; background: rgba(255,255,255,.16); border-radius: 14px; padding: 6px 0; }
+.cd-cell small { font-size: 12px; opacity: .85; margin-top: 5px; }
+.cd-foot { font-size: 14px; background: rgba(255,255,255,.15); border-radius: 12px; padding: 8px 11px; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+#app.enter > *:not(.topbar) { animation: rise .42s cubic-bezier(.2,.75,.25,1) both; }
+#app.enter > *:nth-child(3) { animation-delay: .04s; } #app.enter > *:nth-child(4) { animation-delay: .08s; }
+#app.enter > *:nth-child(5) { animation-delay: .12s; } #app.enter > *:nth-child(6) { animation-delay: .16s; }
+#app.enter > *:nth-child(7) { animation-delay: .20s; } #app.enter > *:nth-child(n+8) { animation-delay: .24s; }
+@media (prefers-reduced-motion: reduce) { #app.enter > * { animation: none !important; } }
+
+/* чат */
+#app.tab-chat { padding-bottom: calc(var(--nav-h) + 14px); display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.chat { display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 6px; flex: 1; }
+.chat-empty { margin: auto 0; }
+.item.member .btn.sm { white-space: nowrap; flex: none; }
+.chat-empty { text-align: center; color: var(--ink-soft); padding: 46px 12px; background: #fff; border-radius: 20px; box-shadow: 0 4px 14px rgba(91,43,217,.08); line-height: 1.6; }
+.chat-day { text-align: center; margin: 14px 0 6px; }
+.chat-day span { font-size: 12px; font-weight: 700; color: var(--ink-soft); background: rgba(255,255,255,.9); padding: 4px 11px; border-radius: 999px; box-shadow: 0 2px 6px rgba(91,43,217,.08); }
+.brow { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
+.brow.cont { margin-top: 3px; }
+.brow.me { justify-content: flex-end; }
+.ava-gap { width: 30px; flex: none; }
+.bcol { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; min-width: 0; }
+.bname { font-size: 12.5px; font-weight: 700; margin: 0 0 3px 12px; }
+.bname.n0 { color: #6a2cf0; } .bname.n1 { color: #e0245e; } .bname.n2 { color: #1593c4; } .bname.n3 { color: #0a9b62; }
+.bubble { display: inline-block; border: 0; text-align: left; font: inherit; font-size: 15.5px; line-height: 1.38; padding: 8px 12px 7px; border-radius: 19px;
+  background: #fff; color: var(--ink); box-shadow: 0 2px 8px rgba(91,43,217,.09); white-space: pre-wrap; word-break: break-word; max-width: 100%; margin: 0; }
+.brow:not(.me) .bubble { border-bottom-left-radius: 7px; }
+.brow.me .bubble { background: linear-gradient(135deg, #6a2cf0, #b02fd6); color: #fff; border-bottom-right-radius: 7px; max-width: 80%; box-shadow: 0 4px 12px rgba(106,44,240,.25); }
+.bubble .t { display: inline-block; font-size: 11px; opacity: .62; margin-left: 9px; position: relative; top: 3px; white-space: nowrap; }
+.bubble.deleted, .brow.me .bubble.deleted { background: transparent; color: var(--ink-soft); box-shadow: none; border: 1.5px dashed #d4c8f5; }
+.bubble .gone { font-style: italic; }
+button.bubble { cursor: pointer; }
+button.bubble:active { filter: brightness(.96); }
+.composer { position: sticky; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px); z-index: 5; display: flex; gap: 8px; align-items: center;
+  margin-top: 12px; background: #fff; border-radius: 999px; padding: 6px 6px 6px 18px; box-shadow: 0 8px 24px rgba(91,43,217,.20); }
+.composer input { flex: 1; border: 0; background: transparent; font-size: 16px; padding: 9px 0; min-width: 0; min-height: 0; box-shadow: none; }
+.composer input:focus { outline: none; box-shadow: none; border: 0; }
+.send { width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #6a2cf0, #ff3d8b); box-shadow: 0 4px 12px rgba(255,61,139,.35); }
+.send svg { width: 20px; height: 20px; fill: currentColor; }
+.send:active { transform: scale(.93); }
+body.typing nav.bottom { display: none; }
+body.typing .composer { position: static; }
+.quote { background: var(--lake-soft); border-radius: 12px; padding: 9px 11px; word-break: break-word; white-space: pre-wrap; }
+nav.bottom button { font-size: 11.5px; }
+
 </style>
 <div id="splash" aria-live="polite">
   <div class="hello">Привет</div>
@@ -592,11 +687,11 @@ nav.bottom .badge { background: var(--pink); }
       if (mine.current.remaining > 0) {
         var left = daysBetween(t, mine.nextDeadline);
         if (left === 0) {
-          out.push({ level: 'warn', tab: 'payments', text: 'Сегодня срок оплаты. За эту неделю осталось внести: ' + formatKGS(mine.current.remaining) + '.' });
+          out.push({ kind: 'deadline', level: 'warn', tab: 'payments', text: 'Сегодня срок оплаты. За эту неделю осталось внести: ' + formatKGS(mine.current.remaining) + '.' });
         } else if (left === 1) {
-          out.push({ level: 'warn', tab: 'payments', text: 'Завтра срок оплаты (' + prettyDate(mine.nextDeadline, true) + '): ' + formatKGS(mine.current.remaining) + '.' });
+          out.push({ kind: 'deadline', level: 'warn', tab: 'payments', text: 'Завтра срок оплаты (' + prettyDate(mine.nextDeadline, true) + '): ' + formatKGS(mine.current.remaining) + '.' });
         } else {
-          out.push({ level: 'info', tab: 'payments', text: 'Ближайший срок: ' + prettyDate(mine.nextDeadline, true) + ' (через ' + left + ' ' + plural(left, 'день', 'дня', 'дней') + '). За эту неделю: ' + formatKGS(mine.current.remaining) + '.' });
+          out.push({ kind: 'deadline', level: 'info', tab: 'payments', text: 'Ближайший срок: ' + prettyDate(mine.nextDeadline, true) + ' (через ' + left + ' ' + plural(left, 'день', 'дня', 'дней') + '). За эту неделю: ' + formatKGS(mine.current.remaining) + '.' });
         }
       }
     }
@@ -649,10 +744,37 @@ nav.bottom .badge { background: var(--pink); }
   var token = null, changeCb = null, statusCb = null, pollTimer = null;
   var POLL_MS = 15000;
 
-  function readToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+  // The login is kept in two places (localStorage and IndexedDB), so it survives
+  // closing the site; if one of them is wiped, the other one brings it back.
+  function idb(mode, fn) {
+    return new Promise(function (resolve) {
+      try {
+        var req = indexedDB.open('koshelek', 1);
+        req.onupgradeneeded = function () { req.result.createObjectStore('kv'); };
+        req.onerror = function () { resolve(null); };
+        req.onsuccess = function () {
+          try {
+            var db = req.result, tx = db.transaction('kv', mode), r = fn(tx.objectStore('kv'));
+            tx.oncomplete = function () { resolve(r && r.result !== undefined ? r.result : null); db.close(); };
+            tx.onerror = tx.onabort = function () { resolve(null); db.close(); };
+          } catch (e) { resolve(null); }
+        };
+      } catch (e) { resolve(null); }
+    });
+  }
+  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(null); }, ms); })]); }
+  function goodToken(t) { return typeof t === 'string' && /^[0-9a-f]{64}$/.test(t) ? t : null; }
+  async function readToken() {
+    var t = null;
+    try { t = goodToken(localStorage.getItem(TOKEN_KEY)); } catch (e) { }
+    if (!t) t = goodToken(await withTimeout(idb('readonly', function (st) { return st.get('token'); }), 1500));
+    if (t) writeToken(t);
+    return t;
+  }
   function writeToken(t) {
     token = t || null;
     try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch (e) { }
+    idb('readwrite', function (st) { return t ? st.put(t, 'token') : st.delete('token'); });
   }
 
   async function call(fn, args) {
@@ -688,7 +810,11 @@ nav.bottom .badge { background: var(--pink); }
   }
 
   window.API = {
-    init: async function () { token = readToken(); },
+    init: async function () {
+      token = await readToken();
+      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () { }); } catch (e) { }
+    },
+    chat: function (known) { return call('wallet_chat', { p_token: token, p_known: known || '' }); },
     hasToken: function () { return !!token; },
     status: function () { return call('wallet_status', {}); },
     register: async function (login, password, name) {
@@ -762,7 +888,8 @@ nav.bottom .badge { background: var(--pink); }
   var S = {
     phase: 'boot', uid: null, data: null, tab: 'home', hist: 'tx', payMember: null, reportMonth: null,
     modal: null, live: true, busy: false, drafts: {}, showAllPayments: false, loginError: '', bootError: '',
-    loginTab: 'login', hasAdmin: true, pendingMe: null, lastJson: ''
+    loginTab: 'login', hasAdmin: true, pendingMe: null, lastJson: '',
+    chat: { version: '', messages: [], sending: false }, chatToEnd: false, enter: true, shownBal: null, cdRolled: false
   };
   var IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var IS_STANDALONE = window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
@@ -822,16 +949,12 @@ nav.bottom .badge { background: var(--pink); }
     return '<div class="login"><h1>Общий кошелёк</h1><div class="msg danger" style="margin-top:16px">' + esc(S.bootError) +
       '</div>' + btn('Попробовать снова', 'reload', '', 'full') + '</div>';
   }
-  function homeScreenTip() {
-    if (IS_STANDALONE) return '';
-    return '<div class="msg info tip">Совет: в Safari нажмите <b>«Поделиться»</b> → <b>«На экран „Домой“»</b>. Кошелёк будет открываться как приложение. Там нужно будет один раз войти по логину и паролю.</div>';
-  }
   function registerForm(first) {
     return '<form data-form="register" style="margin-top:14px" autocomplete="on">' +
       '<label for="r-name">Ваше имя</label><input id="r-name" type="text" maxlength="40" autocomplete="name" value="' + esc(draft('r-name', '')) + '" required>' +
-      '<label for="r-login">Придумайте логин</label><input id="r-login" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="Например: aziz" value="' + esc(draft('r-login', '')) + '" required>' +
+      '<label for="r-login">Придумайте логин</label><input id="r-login" name="username" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="Например: aziz" value="' + esc(draft('r-login', '')) + '" required>' +
       '<p class="muted small" style="margin-top:4px">От 3 до 20 букв или цифр, без пробелов.</p>' +
-      '<label for="r-pass">Придумайте пароль</label><input id="r-pass" type="password" maxlength="72" autocomplete="new-password" value="' + esc(draft('r-pass', '')) + '" required>' +
+      '<label for="r-pass">Придумайте пароль</label><input id="r-pass" name="new-password" type="password" maxlength="72" autocomplete="new-password" value="' + esc(draft('r-pass', '')) + '" required>' +
       '<p class="muted small" style="margin-top:4px">Не короче 6 символов. Запомните его.</p>' +
       '<label for="r-pass2">Повторите пароль</label><input id="r-pass2" type="password" maxlength="72" autocomplete="new-password" value="' + esc(draft('r-pass2', '')) + '" required>' +
       '<button class="btn full" type="submit">' + (first ? 'Создать кошелёк' : 'Отправить заявку') + '</button></form>';
@@ -847,21 +970,21 @@ nav.bottom .badge { background: var(--pink); }
     }).join('') + '</div>';
     if (S.loginTab === 'login') {
       h += '<form data-form="login" autocomplete="on">' +
-        '<label for="l-login">Логин</label><input id="l-login" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" value="' + esc(draft('l-login', '')) + '" required>' +
-        '<label for="l-pass">Пароль</label><input id="l-pass" type="password" maxlength="72" autocomplete="current-password" value="' + esc(draft('l-pass', '')) + '" required>' +
+        '<label for="l-login">Логин</label><input id="l-login" name="username" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" value="' + esc(draft('l-login', '')) + '" required>' +
+        '<label for="l-pass">Пароль</label><input id="l-pass" name="password" type="password" maxlength="72" autocomplete="current-password" value="' + esc(draft('l-pass', '')) + '" required>' +
         '<button class="btn full" type="submit">Войти</button></form>' +
         '<p class="muted small" style="margin-top:12px">Забыли пароль? Попросите главного администратора сбросить его.</p>';
     } else {
       h += '<p class="muted">Заполните поля. После этого главный администратор подтвердит вас, и кошелёк откроется.</p>' + registerForm(false);
     }
-    return h + homeScreenTip() + '</div>';
+    return h + '</div>';
   }
   function viewPending() {
     var me = S.pendingMe || {};
     return '<div class="login"><h1>Общий кошелёк</h1>' +
       '<div class="msg info" style="margin-top:16px">Здравствуйте, <b>' + esc(me.name) + '</b>! Ваша заявка отправлена. Главный администратор должен подтвердить вас. Как только он это сделает, кошелёк откроется сам.</div>' +
       '<p class="muted small" style="margin-top:8px">Ваш логин: <b>' + esc(me.login) + '</b></p>' +
-      btn('Проверить снова', 'refresh', '', 'full') + btn('Выйти', 'logout', '', 'full ghost') + homeScreenTip() + '</div>';
+      btn('Проверить снова', 'refresh', '', 'full') + btn('Выйти', 'logout', '', 'full ghost') + '</div>';
   }
 
   function viewShell(c) {
@@ -869,19 +992,155 @@ nav.bottom .badge { background: var(--pink); }
       ['home', 'Главная', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>', 0],
       ['payments', 'Платежи', '<path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/><path d="M3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1"/>', c.toReview.length],
       ['expenses', 'Расходы', '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/>', c.toVote.length + c.toPay.length],
+      ['chat', 'Чат', '<path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9.5h8M8 12.5h5"/>', -1],
       ['history', 'История', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 0],
       ['more', 'Ещё', '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 0]
     ];
-    var body = { home: viewHome, payments: viewPayments, expenses: viewExpenses, history: viewHistory, more: viewMore }[S.tab](c);
-    return '<div id="app">' +
+    var body = { home: viewHome, payments: viewPayments, expenses: viewExpenses, chat: viewChat, history: viewHistory, more: viewMore }[S.tab](c);
+    var unread = chatUnread();
+    return '<div id="app" class="' + (S.enter ? 'enter ' : '') + 'tab-' + S.tab + '">' +
       '<div class="topbar"><span class="brand">Общий кошелёк</span>' +
-      '<span class="who"><span class="sync ' + (S.live ? '' : 'off') + '" title="' + (S.live ? 'На связи' : 'Нет связи, повторим позже') + '"></span><b>' + esc(c.me.full_name) + '</b><br><span class="role">' + ROLE_NAME[c.me.role] + '</span></span></div>' +
+      '<span class="me-box"><span class="who"><span class="sync ' + (S.live ? '' : 'off') + '" title="' + (S.live ? 'На связи' : 'Нет связи, повторим позже') + '"></span><b>' + esc(c.me.full_name) + '</b><br><span class="role">' + ROLE_NAME[c.me.role] + '</span></span>' + ava(c, c.me.id, 'md') + '</span></div>' +
       body + '</div>' +
       '<nav class="bottom" aria-label="Меню"><div class="inner">' + tabs.map(function (t) {
         return '<button data-act="tab" data-tab="' + t[0] + '" class="' + (S.tab === t[0] ? 'on' : '') + '"' + (S.tab === t[0] ? ' aria-current="page"' : '') + '>' +
           '<svg viewBox="0 0 24 24" aria-hidden="true">' + t[2] + '</svg>' + t[1] +
-          (t[3] ? '<span class="badge" aria-label="' + t[3] + ' ждут">' + t[3] + '</span>' : '') + '</button>';
+          (t[3] === -1 ? '<span class="badge" id="nav-chat-badge"' + (unread ? '' : ' hidden') + '>' + unread + '</span>'
+            : t[3] ? '<span class="badge" aria-label="' + t[3] + ' ждут">' + t[3] + '</span>' : '') + '</button>';
       }).join('') + '</div></nav>' + viewModal();
+  }
+
+  // ----- avatars, quick actions, countdown
+  function ava(c, id, size) {
+    var i = 0, p = null;
+    c.d.profiles.forEach(function (q, k) { if (q.id === id) { i = k; p = q; } });
+    var letter = p ? p.full_name.trim().charAt(0).toUpperCase() : '?';
+    return '<span class="ava c' + (i % 4) + (size ? ' ' + size : '') + '" aria-hidden="true">' + esc(letter) + '</span>';
+  }
+  function quickActions() {
+    var unread = chatUnread();
+    var items = [
+      ['payments', 'Внести', '<path d="M12 5v14M5 12h14"/>'],
+      ['expenses', 'Расход', '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 9h6"/>'],
+      ['chat', 'Чат', '<path d="M4 5h16v11H9l-5 4V5z"/>'],
+      ['history', 'История', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>']
+    ];
+    return '<div class="quick">' + items.map(function (q) {
+      return '<button data-act="tab" data-tab="' + q[0] + '"><span class="qi"><svg viewBox="0 0 24 24" aria-hidden="true">' + q[2] + '</svg>' +
+        (q[0] === 'chat' ? '<span class="qb" id="qa-chat-badge"' + (unread ? '' : ' hidden') + '>' + unread + '</span>' : '') + '</span>' + q[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  // Kyrgyzstan is UTC+6 all year: the deadline ends at 24:00 of Saturday there.
+  function deadlineEndMs(dateStr) { var p = dateStr.split('-').map(Number); return Date.UTC(p[0], p[1] - 1, p[2] + 1) - 6 * 3600000; }
+  function countdownCard(m) {
+    if (!m) return '';
+    var target = deadlineEndMs(m.nextDeadline), paid = m.current.remaining === 0, left = target - Date.now();
+    var state = m.debt > 0 ? 'late' : paid ? 'paid' : left < 86400000 ? 'soon' : 'calm';
+    var foot = m.debt > 0 ? 'Просрочено: <b>' + money(m.debt) + '</b>. Внесите как можно скорее.'
+      : paid ? 'Эта неделя у вас оплачена. Спасибо! ✓'
+      : 'За эту неделю осталось внести: <b>' + money(m.current.remaining) + '</b>';
+    return '<button class="countdown ' + state + '" id="cd" data-act="tab" data-tab="payments" data-target="' + target + '">' +
+      '<span class="cd-head"><span>' + (paid && !m.debt ? 'До конца недели' : 'До срока оплаты') + '</span><span class="cd-date">' + CW.prettyDate(m.nextDeadline, true).replace(/ \d{4}$/, '') + ', 23:59</span></span>' +
+      '<span class="cd-digits">' + ['d', 'h', 'm', 's'].map(function (u) {
+        return '<span class="cd-cell"><b id="cd-' + u + '">00</b><small id="cd-' + u + 'l"></small></span>';
+      }).join('<i>:</i>') + '</span>' +
+      '<span class="cd-foot">' + foot + '</span></button>';
+  }
+  function tickCountdown() {
+    var el = document.getElementById('cd');
+    if (!el) return;
+    var left = Math.max(0, Number(el.getAttribute('data-target')) - Date.now());
+    var t = Math.floor(left / 1000), v = { d: Math.floor(t / 86400), h: Math.floor(t % 86400 / 3600), m: Math.floor(t % 3600 / 60), s: t % 60 };
+    var words = { d: ['день', 'дня', 'дней'], h: ['час', 'часа', 'часов'], m: ['минута', 'минуты', 'минут'], s: ['секунда', 'секунды', 'секунд'] };
+    Object.keys(v).forEach(function (u) {
+      var b = document.getElementById('cd-' + u), l = document.getElementById('cd-' + u + 'l');
+      if (b) b.textContent = String(v[u]).padStart(2, '0');
+      if (l) l.textContent = CW.plural(v[u], words[u][0], words[u][1], words[u][2]);
+    });
+    if (left === 0) { if (!S.cdRolled) { S.cdRolled = true; setTimeout(render, 1500); } }
+    else S.cdRolled = false;
+  }
+
+  // ----- CHAT
+  function chatReadGet() { try { return Number(localStorage.getItem('koshelek_chat_read_' + S.uid)) || 0; } catch (e) { return 0; } }
+  function chatReadSet(id) { try { localStorage.setItem('koshelek_chat_read_' + S.uid, String(id)); } catch (e) { } }
+  function chatUnread() {
+    var read = chatReadGet();
+    return S.chat.messages.filter(function (m) { return m.id > read && !m.deleted && m.member_id !== S.uid; }).length;
+  }
+  function timeOnly(ts) {
+    return new Intl.DateTimeFormat('ru-RU', { timeZone: CW.TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ts));
+  }
+  function dayLabel(day, today) {
+    if (day === today) return 'Сегодня';
+    if (day === CW.addDays(today, -1)) return 'Вчера';
+    return CW.prettyDate(day, true).replace(' ' + today.slice(0, 4), '');
+  }
+  function chatListHtml(c) {
+    var list = S.chat.messages;
+    if (!list.length) return '<div class="chat-empty">Здесь пока тихо.<br>Напишите первое сообщение друзьям 👋</div>';
+    var h = '', lastDay = '', prev = null, isMain = c.me.role === 'main_admin';
+    list.forEach(function (m) {
+      var day = CW.localDate(m.created_at);
+      if (day !== lastDay) { h += '<div class="chat-day"><span>' + dayLabel(day, c.today) + '</span></div>'; lastDay = day; prev = null; }
+      var mine = m.member_id === c.me.id;
+      var cont = prev && prev.member_id === m.member_id && (new Date(m.created_at) - new Date(prev.created_at)) < 5 * 60000;
+      var canDel = !m.deleted && (mine || isMain);
+      var body = m.deleted ? '<span class="gone">Сообщение удалено</span>' : esc(m.body);
+      var bubble = '<' + (canDel ? 'button data-act="msg-menu" data-id="' + m.id + '"' : 'div') + ' class="bubble' + (m.deleted ? ' deleted' : '') + '">' +
+        body + '<span class="t">' + timeOnly(m.created_at) + '</span></' + (canDel ? 'button' : 'div') + '>';
+      if (mine) h += '<div class="brow me' + (cont ? ' cont' : '') + '">' + bubble + '</div>';
+      else {
+        var idx = 0; c.d.profiles.forEach(function (q, k) { if (q.id === m.member_id) idx = k % 4; });
+        h += '<div class="brow' + (cont ? ' cont' : '') + '">' + (cont ? '<span class="ava-gap"></span>' : ava(c, m.member_id, 'sm')) +
+          '<div class="bcol">' + (cont ? '' : '<div class="bname n' + idx + '">' + esc(name(c, m.member_id)) + '</div>') + bubble + '</div></div>';
+      }
+      prev = m;
+    });
+    return h;
+  }
+  function viewChat(c) {
+    return '<h2>Общий чат</h2><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
+      '<form data-form="chat" class="composer" autocomplete="off">' +
+      '<input id="chat-input" type="text" maxlength="1000" placeholder="Сообщение…" enterkeyhint="send" autocomplete="off" aria-label="Сообщение">' +
+      '<button type="submit" class="send" aria-label="Отправить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg></button></form>';
+  }
+  function markChatRead() {
+    var last = S.chat.messages.length ? S.chat.messages[S.chat.messages.length - 1].id : 0;
+    if (last > chatReadGet()) chatReadSet(last);
+    updateChatBadges();
+  }
+  function updateChatBadges() {
+    var n = chatUnread();
+    ['nav-chat-badge', 'qa-chat-badge'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (!b) return;
+      b.textContent = n; if (n) b.removeAttribute('hidden'); else b.setAttribute('hidden', '');
+    });
+  }
+  function scrollChatEnd() { window.scrollTo(0, document.documentElement.scrollHeight); }
+  function updateChatList() {
+    var el = document.getElementById('chat-list');
+    if (!el || S.phase !== 'app' || !S.data) return;
+    var nearEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
+    el.innerHTML = chatListHtml(derive());
+    if (nearEnd || S.chatToEnd) { scrollChatEnd(); S.chatToEnd = false; }
+  }
+  var chatLoading = false;
+  async function loadChat() {
+    if (chatLoading || S.phase !== 'app') return;
+    chatLoading = true;
+    try {
+      var r = await API.chat(S.chat.version);
+      if (r && !r.unchanged) {
+        S.chat.version = r.version;
+        S.chat.messages = r.messages || [];
+        if (S.tab === 'chat') { updateChatList(); markChatRead(); }
+        updateChatBadges();
+      }
+    } catch (e) {
+      if (e.needLogin) { API.forget(); await toLogin(); }
+    } finally { chatLoading = false; }
   }
 
   // ----- HOME
@@ -895,6 +1154,7 @@ nav.bottom .badge { background: var(--pink); }
     if (c.bal.pendingIn > 0) h += '<span class="note-chip">Ждут проверки: <b>' + money(c.bal.pendingIn) + '</b></span>';
     if (c.bal.approvedNotPaid > 0) h += '<span class="note-chip">Одобрено, ещё не оплачено: <b>' + money(c.bal.approvedNotPaid) + '</b></span>';
     h += '<span class="note-chip">Баланс обновляется сразу после платежа</span></div>';
+    h += quickActions();
 
     if (!s.setup_done) {
       if (c.me.role === 'main_admin') {
@@ -914,13 +1174,12 @@ nav.bottom .badge { background: var(--pink); }
       me: c.me, settings: s, today: c.today, summaries: c.summaries, profilesById: c.byId,
       contributions: c.d.contributions, expenses: c.d.expenses, votes: c.d.votes
     });
-    if (rem.length) {
-      h += '<h2>Для вас</h2>' + rem.map(function (r) {
-        return '<button class="msg ' + r.level + '" data-act="tab" data-tab="' + r.tab + '">' + esc(r.text) + '</button>';
-      }).join('');
-    }
-
     var m = c.summaries[c.me.id];
+    rem = rem.filter(function (r) { return r.kind !== 'deadline'; });
+    h += '<h2>Для вас</h2>' + countdownCard(m) + rem.map(function (r) {
+      return '<button class="msg ' + r.level + '" data-act="tab" data-tab="' + r.tab + '">' + esc(r.text) + '</button>';
+    }).join('');
+
     if (m) {
       var pct = Math.min(100, Math.round(m.current.paid / s.weekly_amount * 100));
       h += '<h2>Ваша неделя</h2><div class="panel">' +
@@ -930,15 +1189,18 @@ nav.bottom .badge { background: var(--pink); }
       if (m.debt > 0) h += '<p class="bad-text" style="margin-top:10px">Просрочено: ' + money(m.debt) + ' (' + m.missedWeeks + ' ' + CW.plural(m.missedWeeks, 'неделя', 'недели', 'недель') + ')</p>';
       else if (m.current.remaining === 0) h += '<p class="good-text" style="margin-top:10px">Всё оплачено. Спасибо!</p>';
       if (m.creditAhead > 0) h += '<p class="muted small" style="margin-top:6px">Оплачено вперёд: ' + money(m.creditAhead) + '</p>';
-      h += btn('Я отправил(а) деньги', 'tab', 'data-tab="payments"', 'full') + btn('Запросить расход', 'tab', 'data-tab="expenses"', 'full ghost') + '</div>';
+      h += '</div>';
     }
 
     h += '<h2>Все участники</h2><div class="panel tight list">' + c.profiles.map(function (p) {
       var x = c.summaries[p.id], line;
       if (x.debt > 0) line = '<span class="bad-text">Долг ' + money(x.debt) + '</span><div class="muted small">' + x.missedWeeks + ' ' + CW.plural(x.missedWeeks, 'пропущенная неделя', 'пропущенные недели', 'пропущенных недель') + '</div>';
       else if (x.current.remaining === 0) line = '<span class="good-text">Эта неделя оплачена</span>';
-      else line = '<span>На этой неделе осталось: ' + money(x.current.remaining) + '</span>';
-      return '<div class="item row"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · всего внесено ' + money(x.totalApproved) + '</div></div><div style="text-align:right">' + line + '</div></div>';
+      else line = '<span>Осталось: ' + money(x.current.remaining) + '</span>';
+      var wp = Math.min(100, Math.round(Math.min(x.current.paid, s.weekly_amount) / s.weekly_amount * 100));
+      return '<div class="item member">' + ava(c, p.id) + '<div class="grow"><div class="row top"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · всего ' + money(x.totalApproved) + '</div></div>' +
+        '<div style="text-align:right" class="small">' + line + '</div></div>' +
+        '<div class="bar thin"><i class="' + (wp >= 100 ? 'full' : '') + '" style="width:' + wp + '%"></i></div></div></div>';
     }).join('') + '</div>';
     return h;
   }
@@ -991,9 +1253,9 @@ nav.bottom .badge { background: var(--pink); }
       h += '<div class="panel tight list">' + shown.map(function (x) {
         var line = '';
         if (x.status === 'rejected') line = (x.status === 'approved' ? 'Подтвердил(а): ' : 'Отклонил(а): ') + '' + esc(name(c, x.reviewed_by)) + ' · ' + CW.prettyDateTime(x.reviewed_at);
-        return '<div class="item"><div class="row top"><div><b>' + esc(name(c, x.member_id)) + '</b> <span class="num">' + money(x.amount) + '</span>' +
+        return '<div class="item member">' + ava(c, x.member_id) + '<div class="grow"><div class="row top"><div><b>' + esc(name(c, x.member_id)) + '</b> <span class="num plus">+' + money(x.amount) + '</span>' +
           '<div class="muted small">Отправлено ' + CW.prettyDate(x.transfer_date, true) + (x.note ? ' · ' + esc(x.note) : '') + '</div></div>' + chip(x.status, PAY_TEXT[x.status]) + '</div>' +
-          (line ? '<div class="muted small" style="margin-top:4px">' + line + (x.review_note ? ' · “' + esc(x.review_note) + '”' : '') + '</div>' : '') + '</div>';
+          (line ? '<div class="muted small" style="margin-top:4px">' + line + (x.review_note ? ' · “' + esc(x.review_note) + '”' : '') + '</div>' : '') + '</div></div>';
       }).join('') + '</div>';
       if (all.length > 15) h += btn(S.showAllPayments ? 'Показать меньше' : 'Показать все (' + all.length + ')', 'togglepay', '', 'ghost full');
     }
@@ -1020,7 +1282,7 @@ nav.bottom .badge { background: var(--pink); }
     h += list.map(function (e) {
       var v = CW.expenseVotes(e, c.d.votes);
       var others = c.profiles.filter(function (p) { return p.id !== e.requested_by; });
-      var line = '<div class="row top"><div><b>' + esc(e.description) + '</b><div class="muted small">Запросил(а): ' + esc(name(c, e.requested_by)) + ' · ' + CW.prettyDate(CW.localDate(e.created_at)) + '</div></div>' +
+      var line = '<div class="row top"><div><b>' + esc(e.description) + '</b><div class="muted small asker">' + ava(c, e.requested_by, 'xs') + esc(name(c, e.requested_by)) + ' · ' + CW.prettyDate(CW.localDate(e.created_at)) + '</div></div>' +
         '<div style="text-align:right"><div class="big num" style="font-size:20px">' + money(e.amount) + '</div>' + chip(e.status, EXP_TEXT[e.status]) + '</div></div>';
       var voters = '';
       if (v.list.length || e.status === 'voting') {
@@ -1117,8 +1379,8 @@ nav.bottom .badge { background: var(--pink); }
     if (c.me.role === 'main_admin') {
       var others = c.profiles.filter(function (p) { return p.id !== c.me.id; });
       h += '<h2>Участники</h2><div class="panel tight list">' + c.profiles.map(function (p) {
-        return '<div class="item row"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · логин: ' + esc(p.login || '') + '</div></div>' +
-          (p.id !== c.me.id ? btn('Сбросить пароль', 'resetpass', 'data-id="' + esc(p.id) + '"', 'ghost sm') : '') + '</div>';
+        return '<div class="item member">' + ava(c, p.id) + '<div class="grow row"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · логин: ' + esc(p.login || '') + '</div></div>' +
+          (p.id !== c.me.id ? btn('Сбросить пароль', 'resetpass', 'data-id="' + esc(p.id) + '"', 'ghost sm') : '') + '</div></div>';
       }).join('') + '</div>';
       if (!others.length) h += '<p class="muted small">Друзья пока не вошли.</p>';
     }
@@ -1129,22 +1391,13 @@ nav.bottom .badge { background: var(--pink); }
         (cands.length ? '<label for="as-sel">Помощник</label><select id="as-sel" data-change="assistant"><option value="">Пока никто</option>' + cands.map(function (p) {
           return '<option value="' + esc(p.id) + '"' + (cur && cur.id === p.id ? ' selected' : '') + '>' + esc(p.full_name) + '</option>';
         }).join('') + '</select>' : '<p class="small">Больше никто пока не вошёл.</p>') + '</div>';
-      h += '<h2>Пригласите друзей</h2><div class="panel small stack"><p>Уже в кошельке: <b>' + c.profiles.length + ' из 4</b>.</p>' +
+      if (c.profiles.length < 4) h += '<h2>Пригласите друзей</h2><div class="panel small stack"><p>Уже в кошельке: <b>' + c.profiles.length + ' из 4</b>.</p>' +
         '<p>Отправьте друзьям эту ссылку:</p><div class="linkbox">' + esc(siteLink()) + '</div>' +
         '<div class="btns">' + btn('Отправить ссылку', 'sharelink', '', 'sm') + btn('Скопировать', 'copylink', '', 'sm ghost') + '</div>' +
         '<p>Друг открывает ссылку в Safari, нажимает <b>«Я новый участник»</b> и придумывает логин и пароль. Потом его заявка появится здесь, вверху. Нажмите <b>«Принять»</b>.</p></div>';
     }
-    h += '<h2>Приложение на телефоне</h2><div class="panel small stack">' +
-      '<p>В Safari нажмите <b>«Поделиться»</b> (квадрат со стрелкой) → <b>«На экран „Домой“»</b> → <b>«Добавить»</b>.</p>' +
-      '<p>На экране появится иконка «Кошелёк». Откройте её и один раз войдите по логину и паролю.</p></div>';
     h += '<h2>Резервная копия</h2><div class="panel"><p class="muted">Сохраните копию всех данных кошелька на телефон или компьютер. Делайте это примерно раз в месяц и храните файл в надёжном месте.</p>' +
       btn('Скачать резервную копию', 'backup', '', 'full') + '</div>';
-    h += '<h2>Как работает кошелёк</h2><div class="panel small stack">' +
-      '<p>• Каждый друг вносит <b>' + money(c.d.settings.weekly_amount) + '</b> каждую неделю. Срок — суббота.</p>' +
-      '<p>• Программа <b>не</b> подключена к Simbank: суммы вносите вы сами, поэтому вносите только настоящие переводы.</p>' +
-      '<p>• Платежи учитываются сразу, без подтверждения.</p>' +
-      '<p>• Администратор записывает расход сразу. Расход участника должны одобрить двое друзей, потом администратор отмечает его оплаченным.</p>' +
-      '<p>• Пропущенные недели копятся как долг. Штрафов нет.</p></div>';
     return h;
   }
 
@@ -1187,6 +1440,32 @@ nav.bottom .badge { background: var(--pink); }
       if (f) { f.focus(); try { if (selStart !== null) f.setSelectionRange(selStart, selEnd); } catch (e) { } }
     }
     window.scrollTo(0, scroll);
+    afterRender();
+  }
+  function afterRender() {
+    var wasEnter = S.enter;
+    S.enter = false;
+    tickCountdown();
+    if (S.phase !== 'app' || !S.data) return;
+    if (S.tab === 'chat') {
+      if (wasEnter || S.chatToEnd) { scrollChatEnd(); S.chatToEnd = false; }
+      markChatRead();
+    }
+    // the balance counts up to its new value
+    var bal = document.querySelector('.simcard .bal');
+    if (bal) {
+      var to = derive().bal.confirmed, from = S.shownBal === null ? Math.max(0, to - Math.max(1000, Math.round(to * 0.25))) : S.shownBal;
+      S.shownBal = to;
+      if (from !== to && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        var t0 = performance.now();
+        (function step(now) {
+          var k = Math.min(1, (now - t0) / 800), e = 1 - Math.pow(1 - k, 3);
+          if (!bal.isConnected) return;
+          bal.textContent = money(Math.round(from + (to - from) * e));
+          if (k < 1) requestAnimationFrame(step);
+        })(t0);
+      }
+    }
   }
 
   // ---------------------------------------------------------------- loading & actions
@@ -1200,9 +1479,13 @@ nav.bottom .badge { background: var(--pink); }
   }
   async function reload(silent) {
     try {
-      var before = S.phase, changed = applyData(await API.loadAll());
+      var before = S.phase, d = await API.loadAll(), changed = applyData(d);
       if (!S.live) { S.live = true; changed = true; }
-      if (changed || !silent || before !== S.phase) render();
+      if (changed || !silent || before !== S.phase) {
+        // on the chat screen a background refresh must not redraw (it would close the keyboard)
+        if (!(silent && before === S.phase && S.tab === 'chat' && document.getElementById('chat-list'))) render();
+      }
+      if (S.phase === 'app' && d.chat_version && d.chat_version !== S.chat.version) loadChat();
     } catch (e) {
       if (e.needLogin) { API.forget(); await toLogin(); if (!silent) toast(e.message, true); return; }
       if (e.offline && S.live) { S.live = false; render(); }
@@ -1226,17 +1509,27 @@ nav.bottom .badge { background: var(--pink); }
 
   async function toLogin() {
     S.phase = 'login'; S.data = null; S.uid = null; S.pendingMe = null; S.lastJson = ''; S.modal = null;
-    S.tab = 'home'; S.showChPass = false;
+    S.tab = 'home'; S.showChPass = false; S.enter = true; S.shownBal = null;
+    S.chat = { version: '', messages: [], sending: false };
     try { var st = await API.status(); S.hasAdmin = !!(st && st.has_admin); }
     catch (e) { S.phase = 'error'; S.bootError = e.message; }
     render();
   }
 
   async function boot() {
+    setInterval(tickCountdown, 1000);
+    setInterval(function () {
+      if (S.phase === 'app' && S.tab === 'chat' && document.visibilityState === 'visible') loadChat();
+    }, 3000);
+    var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    document.addEventListener('focusin', function (e) { if (touch && e.target && e.target.id === 'chat-input') document.body.classList.add('typing'); });
+    document.addEventListener('focusout', function (e) { if (e.target && e.target.id === 'chat-input') document.body.classList.remove('typing'); });
+    // tapping «send» must not close the keyboard
+    document.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('.composer .send')) e.preventDefault(); });
     await API.init();
     API.subscribe(function () { if (S.phase === 'app' || S.phase === 'pending') reloadSoon(); });
     if (!API.hasToken()) return toLogin();
-    try { applyData(await API.loadAll()); }
+    try { applyData(await API.loadAll()); if (S.phase === 'app') loadChat(); }
     catch (e) {
       if (e.needLogin) { API.forget(); return toLogin(); }
       S.phase = 'error'; S.bootError = e.message;
@@ -1265,6 +1558,23 @@ nav.bottom .badge { background: var(--pink); }
     var c = S.phase === 'app' && S.data ? derive() : null;
 
     function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+    if (form === 'chat') {
+      var inp = document.getElementById('chat-input'), text = inp.value.trim();
+      if (!text || S.chat.sending) return;
+      S.chat.sending = true;
+      inp.value = ''; S.drafts['chat-input'] = '';
+      try {
+        await API.rpc('send_message', { p_body: text });
+        S.chatToEnd = true;
+        await loadChat();
+      } catch (e2) {
+        inp.value = text; S.drafts['chat-input'] = text;
+        toast(e2.message, true);
+        if (e2.needLogin) { API.forget(); await toLogin(); }
+      } finally { S.chat.sending = false; }
+      return;
+    }
 
     if (form === 'login') {
       var lg = val('l-login').trim(), pw = val('l-pass');
@@ -1333,7 +1643,27 @@ nav.bottom .badge { background: var(--pink); }
 
     switch (act) {
       case 'reload': location.reload(); break;
-      case 'tab': S.tab = t.getAttribute('data-tab'); render(); window.scrollTo(0, 0); break;
+      case 'tab': {
+        var nt = t.getAttribute('data-tab');
+        if (nt !== S.tab) { S.tab = nt; S.enter = true; window.scrollTo(0, 0); render(); }
+        else window.scrollTo({ top: nt === 'chat' ? document.documentElement.scrollHeight : 0, behavior: 'smooth' });
+        if (nt === 'chat') loadChat();
+        break;
+      }
+      case 'msg-menu': {
+        var mm = S.chat.messages.filter(function (q) { return String(q.id) === id; })[0];
+        if (!mm) return;
+        openModal({
+          title: 'Удалить сообщение?', confirm: 'Удалить', cls: 'bad',
+          body: '<p class="quote">' + esc(mm.body) + '</p><p class="muted" style="margin-top:8px">' +
+            (mm.member_id === S.uid ? 'Друзья увидят надпись «Сообщение удалено».' : 'Вы главный администратор и можете удалить любое сообщение.') + '</p>',
+          action: async function () {
+            try { await API.rpc('delete_message', { p_id: mm.id }); await loadChat(); }
+            catch (e) { toast(e.message, true); }
+          }
+        });
+        break;
+      }
       case 'hist': S.hist = t.getAttribute('data-hist'); render(); break;
       case 'paymember': S.payMember = id; render(); break;
       case 'togglepay': S.showAllPayments = !S.showAllPayments; render(); break;
