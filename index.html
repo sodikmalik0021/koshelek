@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Общий кошелёк</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Кошелёк">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ede4ff">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root { color-scheme: light; }
+:root {
+  --lake: #0e3b5c;
+  --lake-deep: #082a43;
+  --lake-soft: #e6eef4;
+  --snow: #f4f7f9;
+  --paper: #ffffff;
+  --ink: #14232e;
+  --ink-soft: #5a6b78;
+  --line: #dbe3e9;
+  --saffron: #f0a43a;
+  --saffron-deep: #b9700a;
+  --good: #1b7a4b;
+  --good-bg: #e0f3e8;
+  --warn-bg: #fff1d6;
+  --bad: #b3261e;
+  --bad-bg: #fbe4e1;
+  --info-bg: #e3eef8;
+  --radius: 14px;
+  --nav-h: 64px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--snow); color: var(--ink);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- welcome screen ---------- */
+#splash {
+  position: fixed; inset: 0; z-index: 50; background: var(--lake-deep); color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  transition: opacity .5s ease, visibility .5s;
+}
+#splash.gone { opacity: 0; visibility: hidden; }
+#splash .hello { font: 600 56px/1 Georgia, "Times New Roman", serif; letter-spacing: .01em; }
+#splash .app { color: #b9cfe0; font-size: 15px; }
+#splash .bar { width: 120px; height: 3px; background: rgba(255,255,255,.15); border-radius: 3px; overflow: hidden; margin-top: 18px; }
+#splash .bar i { display: block; height: 100%; width: 100%; background: var(--saffron); transform-origin: left; animation: fill 2.2s linear forwards; }
+@keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- layout ---------- */
+#app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(var(--nav-h) + 28px); min-height: 100vh; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 10px; }
+.topbar .brand { font: 700 18px Georgia, serif; color: var(--lake); }
+.topbar .who { font-size: 14px; color: var(--ink-soft); text-align: right; }
+.topbar .who b { color: var(--ink); font-weight: 600; }
+.sync { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; }
+.sync.off { background: var(--saffron); }
+
+h2 { font-size: 19px; margin: 24px 0 10px; color: var(--lake-deep); }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.muted { color: var(--ink-soft); font-size: 14px; }
+.small { font-size: 13px; }
+section.block { margin-top: 6px; }
+
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.panel.tight { padding: 0; overflow: hidden; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.row.top { align-items: flex-start; }
+.stack > * + * { margin-top: 10px; }
+.list > .item { padding: 12px 14px; border-top: 1px solid var(--line); }
+.list > .item:first-child { border-top: 0; }
+.empty { padding: 18px 14px; color: var(--ink-soft); text-align: center; font-size: 15px; }
+
+/* ---------- the card ---------- */
+.simcard {
+  position: relative; overflow: hidden; color: #fff; border-radius: 20px; padding: 20px 20px 18px;
+  min-height: 196px; display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(135deg, #0e3b5c 0%, #0a2f4b 55%, #082a43 100%);
+  box-shadow: 0 14px 28px rgba(8, 42, 67, .28);
+}
+.simcard::before {   /* felt-rug style pattern, drawn by us */
+  content: ""; position: absolute; right: -40px; top: -30px; width: 260px; height: 260px; opacity: .22;
+  background:
+    conic-gradient(from 45deg at 50% 50%, var(--saffron) 0 25%, transparent 0 50%, var(--saffron) 0 75%, transparent 0) 0 0 / 52px 52px;
+  -webkit-mask: radial-gradient(circle at 60% 40%, #000 0 38%, transparent 72%);
+          mask: radial-gradient(circle at 60% 40%, #000 0 38%, transparent 72%);
+}
+.simcard::after {
+  content: ""; position: absolute; inset: 0; border-radius: 20px; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+}
+.simcard > * { position: relative; z-index: 1; }
+.simcard .top { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #c3d6e5; }
+.simcard .chip { width: 38px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #f7d58e, #d9953a); margin-top: 12px; }
+.simcard .lbl { font-size: 13px; color: #b9cfe0; margin-top: 14px; }
+.simcard .bal { font: 700 38px/1.1 Georgia, serif; letter-spacing: .01em; }
+.simcard .bottom { font-size: 13px; color: #b9cfe0; display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.card-notes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.note-chip { background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; font-size: 13px; color: var(--ink-soft); }
+.note-chip b { color: var(--ink); }
+
+/* ---------- messages ---------- */
+.msg { border-radius: 12px; padding: 11px 13px; font-size: 15px; margin-bottom: 8px; display: block; width: 100%; text-align: left; border: 0; }
+.msg.info { background: var(--info-bg); }
+.msg.warn { background: var(--warn-bg); }
+.msg.danger { background: var(--bad-bg); color: #6d1712; }
+.msg.action { background: var(--lake); color: #fff; }
+button.msg { cursor: pointer; }
+
+/* ---------- chips ---------- */
+.chip-s { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.chip-s.paid { background: var(--good-bg); color: var(--good); }
+.chip-s.paid_late { background: #e7efd4; color: #53701a; }
+.chip-s.partial { background: var(--warn-bg); color: var(--saffron-deep); }
+.chip-s.overdue, .chip-s.rejected { background: var(--bad-bg); color: var(--bad); }
+.chip-s.due, .chip-s.pending, .chip-s.voting { background: var(--info-bg); color: var(--lake); }
+.chip-s.approved { background: var(--good-bg); color: var(--good); }
+.chip-s.cancelled { background: #eceff2; color: var(--ink-soft); }
+.role { font-size: 12px; color: var(--ink-soft); }
+
+/* ---------- forms & buttons ---------- */
+label { display: block; font-size: 14px; font-weight: 600; margin: 10px 0 4px; }
+input, select, textarea {
+  width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; min-height: 46px;
+}
+input:focus, select:focus, textarea:focus, button:focus-visible, .seg button:focus-visible {
+  outline: 3px solid rgba(240, 164, 58, .55); outline-offset: 1px; border-color: var(--saffron-deep);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 18px;
+  border-radius: 10px; border: 0; background: var(--lake); color: #fff; font-weight: 600; cursor: pointer;
+}
+.btn:active { transform: translateY(1px); }
+.btn.full { width: 100%; margin-top: 14px; }
+.btn.ghost { background: transparent; color: var(--lake); border: 1.5px solid var(--lake); }
+.btn.good { background: var(--good); }
+.btn.bad { background: var(--bad); }
+.btn.sm { min-height: 40px; padding: 0 14px; font-size: 15px; }
+.btn[disabled] { opacity: .5; cursor: default; }
+.btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btns .btn { flex: 1; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; font-size: 15px; margin-top: 12px; }
+.check input { width: 22px; height: 22px; min-height: 22px; margin-top: 2px; flex: none; }
+
+.seg { display: flex; background: #e9eef2; border-radius: 12px; padding: 3px; gap: 3px; margin: 14px 0 10px; overflow-x: auto; }
+.seg button { flex: 1; min-height: 40px; border: 0; background: transparent; border-radius: 9px; font-weight: 600; color: var(--ink-soft); cursor: pointer; white-space: nowrap; padding: 0 12px; }
+.seg button.on { background: #fff; color: var(--lake-deep); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+/* ---------- progress ---------- */
+.bar { height: 10px; background: #e6ecf0; border-radius: 10px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--saffron); border-radius: 10px; }
+.bar > i.full { background: var(--good); }
+.big { font: 700 26px/1.15 Georgia, serif; color: var(--lake-deep); }
+.bad-text { color: var(--bad); font-weight: 600; }
+.good-text { color: var(--good); font-weight: 600; }
+.plus { color: var(--good); font-weight: 700; }
+.minus { color: var(--bad); font-weight: 700; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 15px; }
+.kv dt { color: var(--ink-soft); } .kv dd { margin: 0; text-align: right; font-weight: 600; }
+.kv .total { border-top: 1px solid var(--line); padding-top: 6px; }
+.voters { font-size: 14px; color: var(--ink-soft); margin-top: 6px; }
+
+/* ---------- bottom navigation ---------- */
+nav.bottom {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom); background: #fff; border-top: 1px solid var(--line);
+  display: flex; justify-content: center;
+}
+nav.bottom .inner { display: flex; width: 100%; max-width: 560px; }
+nav.bottom button {
+  flex: 1; border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; font-size: 12px; color: var(--ink-soft); cursor: pointer; position: relative; min-height: var(--nav-h);
+}
+nav.bottom button svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+nav.bottom button.on { color: var(--lake); font-weight: 700; }
+nav.bottom button.on::before { content: ""; position: absolute; top: 0; width: 34px; height: 3px; background: var(--saffron); border-radius: 0 0 3px 3px; }
+nav.bottom .badge {
+  position: absolute; top: 7px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--bad); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+
+/* ---------- popup ---------- */
+.modal-bg { position: fixed; inset: 0; z-index: 40; background: rgba(8, 42, 67, .55); display: flex; align-items: flex-end; justify-content: center; }
+.modal { background: #fff; width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 20px 18px calc(22px + env(safe-area-inset-bottom)); max-height: 90vh; overflow: auto; }
+.modal h3 { font-size: 19px; margin-bottom: 8px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(var(--nav-h) + 18px); transform: translateX(-50%); z-index: 60; background: var(--lake-deep); color: #fff; padding: 11px 16px; border-radius: 12px; max-width: min(92vw, 520px); font-size: 15px; box-shadow: 0 8px 22px rgba(0,0,0,.25); }
+.toast.err { background: var(--bad); }
+
+.login { max-width: 420px; margin: 0 auto; padding: 56px 20px; }
+.login h1 { font: 700 34px Georgia, serif; color: var(--lake-deep); margin-bottom: 6px; }
+.errtext { color: var(--bad); font-size: 14px; margin-top: 10px; }
+a { color: var(--lake); }
+
+@media print {
+  nav.bottom, .topbar, .seg, .noprint, #splash, .toast { display: none !important; }
+  body { background: #fff; } #app { padding: 0; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #splash .bar i { animation: none; transform: none; }
+  #splash { transition: none; }
+}
+
+/* ================= яркая тема ================= */
+:root {
+  --lake: #5b2bd9; --lake-deep: #2a1470; --lake-soft: #efe9ff;
+  --snow: #f3efff; --line: #e1d8fb; --ink: #1d1340; --ink-soft: #6a5f93;
+  --saffron: #ffb020; --saffron-deep: #c25e00;
+  --good: #0a9b62; --good-bg: #d6f7e8; --warn-bg: #fff0c9;
+  --bad: #e0245e; --bad-bg: #ffe0ea; --info-bg: #e2e9ff;
+  --pink: #ff3d8b; --cyan: #12c2e9; --violet: #7c3aed;
+}
+body { background: linear-gradient(180deg, #ede4ff 0%, #f7f2ff 220px, #f3efff 100%) fixed; }
+#splash { background: linear-gradient(145deg, #2a1470 0%, #5b2bd9 45%, #ff3d8b 100%); }
+#splash .app { color: #ffe6f1; }
+#splash .bar i { background: #fff; }
+.topbar .brand { background: linear-gradient(90deg, #5b2bd9, #ff3d8b); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 20px; }
+h2 { color: var(--lake-deep); display: flex; align-items: center; gap: 8px; }
+h2::before { content: ""; width: 6px; height: 20px; border-radius: 4px; background: linear-gradient(180deg, var(--pink), var(--violet)); }
+.simcard {
+  background: linear-gradient(135deg, #6a2cf0 0%, #b02fd6 48%, #ff3d8b 100%);
+  box-shadow: 0 16px 34px rgba(124, 58, 237, .38);
+}
+.simcard::before { opacity: .28; background: conic-gradient(from 45deg at 50% 50%, #12c2e9 0 25%, transparent 0 50%, #ffb020 0 75%, transparent 0) 0 0 / 52px 52px;
+  -webkit-mask: radial-gradient(circle at 60% 40%, #000 0 38%, transparent 72%); mask: radial-gradient(circle at 60% 40%, #000 0 38%, transparent 72%); }
+.simcard .top, .simcard .lbl, .simcard .bottom { color: #ffe9f4; }
+.panel { border: 0; box-shadow: 0 4px 14px rgba(91, 43, 217, .10); border-left: 5px solid var(--violet); }
+.panel.tight { border-left-color: var(--cyan); }
+.panel.empty { border-left-color: var(--saffron); }
+.note-chip { border: 0; background: #fff; box-shadow: 0 2px 8px rgba(91,43,217,.10); }
+.msg.info { background: var(--info-bg); border-left: 5px solid #4f6bff; }
+.msg.warn { background: var(--warn-bg); border-left: 5px solid var(--saffron); }
+.msg.danger { background: var(--bad-bg); border-left: 5px solid var(--bad); }
+.msg.action { background: linear-gradient(90deg, #5b2bd9, #ff3d8b); color: #fff; }
+.btn { background: linear-gradient(135deg, #6a2cf0, #9b35e0); box-shadow: 0 4px 12px rgba(106, 44, 240, .30); }
+.btn.good { background: linear-gradient(135deg, #0a9b62, #12c2a0); box-shadow: 0 4px 12px rgba(10,155,98,.28); }
+.btn.bad { background: linear-gradient(135deg, #e0245e, #ff5a7a); box-shadow: 0 4px 12px rgba(224,36,94,.28); }
+.btn.ghost { background: #fff; color: var(--violet); border-color: var(--violet); box-shadow: none; }
+.seg { background: #e4dafc; }
+.seg button.on { background: linear-gradient(135deg, #6a2cf0, #b02fd6); color: #fff; box-shadow: 0 2px 8px rgba(106,44,240,.35); }
+.bar > i { background: linear-gradient(90deg, #ffb020, #ff3d8b); }
+.bar > i.full { background: linear-gradient(90deg, #0a9b62, #12c2e9); }
+.big { color: var(--violet); }
+.chip-s.due, .chip-s.pending, .chip-s.voting { background: #e2e9ff; color: #3b4fd6; }
+.chip-s.partial { color: #b85c00; }
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px solid rgba(124,58,237,.35); border-color: var(--violet); }
+.plus { color: var(--good); font-weight: 700; }
+.minus { color: var(--bad); font-weight: 700; }
+nav.bottom { box-shadow: 0 -6px 20px rgba(91,43,217,.14); border-top: 0; }
+nav.bottom button.on::before { background: linear-gradient(90deg, #ff3d8b, #7c3aed); height: 4px; }
+nav.bottom .badge { background: var(--pink); }
+.modal-bg { background: rgba(42, 20, 112, .6); }
+.login h1 { background: linear-gradient(90deg, #5b2bd9, #ff3d8b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ================= сайт: вход, заявки, экран «Домой» ================= */
+.topbar { padding-top: calc(16px + env(safe-area-inset-top)); }
+.login { padding-top: calc(48px + env(safe-area-inset-top)); padding-bottom: 40px; }
+.login .seg { margin-top: 18px; }
+.linkbox { word-break: break-all; background: var(--lake-soft); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-top: 8px; }
+.tip { margin-top: 18px; }
+.item .btns { margin-top: 8px; }
+
+</style>
+<div id="splash" aria-live="polite">
+  <div class="hello">Привет</div>
+  <div class="app">Общий кошелёк</div>
+  <div class="bar"><i></i></div>
+</div>
+<div id="root"></div>
+<div id="toast-host"></div>
+<script>
+/*
+ * Common Wallet - calculation rules.
+ * This file contains NO screens and NO internet code. It only does the maths:
+ * weekly deadlines, who owes what, the balance, history and reports.
+ * It is tested by tests/logic.test.js.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CW = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var TZ = 'Asia/Bishkek';          // all dates are shown in Kyrgyzstan time
+  var DEADLINE_DOW = 6;             // 6 = Saturday
+  var VOTES_NEEDED = 2;             // expense needs 2 approvals from the other 3 friends
+  var MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль',
+    'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  var MONTHS_SHORT = ['янв.', 'февр.', 'мар.', 'апр.', 'мая', 'июн.', 'июл.', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'];
+  var DAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  // 1 неделя, 2 недели, 5 недель
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b > 1 && b < 5) return few;
+    if (b === 1) return one;
+    return many;
+  }
+
+  // ---------- dates (plain "YYYY-MM-DD" text, no time zone surprises) ----------
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function parseDate(s) { var p = s.split('-').map(Number); return Date.UTC(p[0], p[1] - 1, p[2]); }
+  function fmtDate(ms) {
+    var d = new Date(ms);
+    return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+  }
+  function addDays(s, n) { return fmtDate(parseDate(s) + n * 86400000); }
+  function dayOfWeek(s) { return new Date(parseDate(s)).getUTCDay(); }
+  function daysBetween(a, b) { return Math.round((parseDate(b) - parseDate(a)) / 86400000); }
+
+  // The date (in Kyrgyzstan) of a moment in time
+  function localDate(ts) {
+    var parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date(ts));
+    var o = {};
+    parts.forEach(function (p) { o[p.type] = p.value; });
+    return o.year + '-' + o.month + '-' + o.day;
+  }
+  function today() { return localDate(Date.now()); }
+
+  function prettyDate(s, withWeekday) {
+    if (!s) return '';
+    var p = s.split('-').map(Number);
+    var text = p[2] + ' ' + MONTHS_SHORT[p[1] - 1] + ' ' + p[0];
+    return withWeekday ? DAYS[dayOfWeek(s)] + ', ' + text : text;
+  }
+  function prettyDateTime(ts) {
+    if (!ts) return '';
+    var t = new Intl.DateTimeFormat('ru-RU', {
+      timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(new Date(ts));
+    return prettyDate(localDate(ts)) + ', ' + t;
+  }
+  function monthLabel(ym) {
+    var p = ym.split('-').map(Number);
+    return MONTHS[p[1] - 1] + ' ' + p[0];
+  }
+
+  function formatKGS(n) {
+    var v = Math.round(Number(n) || 0);
+    var digits = String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+    return (v < 0 ? '\u2212' : '') + digits + '\u00A0сом';
+  }
+
+  // ---------- weekly deadlines ----------
+  // The first deadline is the first Saturday on or after the start date.
+  function firstDeadline(startDate) {
+    var d = dayOfWeek(startDate);
+    return addDays(startDate, (DEADLINE_DOW - d + 7) % 7);
+  }
+  // All deadlines from the first one up to (and including) the current week's deadline.
+  function deadlinesUpTo(startDate, todayStr) {
+    var out = [];
+    var cur = firstDeadline(startDate);
+    for (var i = 0; i < 2000; i++) {
+      out.push(cur);
+      if (cur >= todayStr) break;
+      cur = addDays(cur, 7);
+    }
+    return out;
+  }
+
+  // ---------- who owes what ----------
+  // Only APPROVED contributions count. Money is applied to the oldest unpaid week first.
+  function memberSummary(memberId, settings, contributions, todayStr) {
+    var weekly = settings.weekly_amount;
+    var deadlines = deadlinesUpTo(settings.start_date, todayStr);
+    var weeks = deadlines.map(function (d) { return { deadline: d, paid: 0, completedOn: null }; });
+
+    var mine = contributions.filter(function (c) {
+      return c.member_id === memberId && c.status === 'approved' && c.transfer_date <= todayStr;
+    }).sort(function (a, b) {
+      if (a.transfer_date !== b.transfer_date) return a.transfer_date < b.transfer_date ? -1 : 1;
+      return a.id - b.id;
+    });
+
+    var credit = 0, wi = 0, totalApproved = 0;
+    mine.forEach(function (c) {
+      var left = c.amount;
+      totalApproved += c.amount;
+      while (left > 0 && wi < weeks.length) {
+        var w = weeks[wi];
+        var take = Math.min(weekly - w.paid, left);
+        w.paid += take;
+        left -= take;
+        if (w.paid >= weekly) { w.completedOn = c.transfer_date; wi++; }
+      }
+      credit += left;
+    });
+
+    var debt = 0, missed = 0;
+    weeks.forEach(function (w) {
+      w.due = weekly;
+      w.remaining = Math.max(0, weekly - w.paid);
+      w.partial = w.paid > 0 && w.paid < weekly;
+      if (w.paid >= weekly) {
+        w.status = w.completedOn > w.deadline ? 'paid_late' : 'paid';
+      } else if (w.deadline < todayStr) {
+        w.status = 'overdue';
+        debt += w.remaining;
+        missed += 1;
+      } else {
+        w.status = w.paid > 0 ? 'partial' : 'due';
+      }
+    });
+
+    var current = weeks[weeks.length - 1];
+    return {
+      memberId: memberId,
+      weeks: weeks,
+      current: current,
+      debt: debt,                       // overdue amount only
+      missedWeeks: missed,
+      totalApproved: totalApproved,
+      creditAhead: credit,              // paid in advance for future weeks
+      toPayNow: debt + current.remaining, // overdue + this week
+      nextDeadline: current.deadline
+    };
+  }
+
+  // ---------- balance ----------
+  function sum(list, pick) {
+    return list.reduce(function (t, x) { return t + pick(x); }, 0);
+  }
+  function balanceInfo(settings, contributions, expenses) {
+    var opening = settings.opening_balance || 0;
+    var approved = contributions.filter(function (c) { return c.status === 'approved'; });
+    var paid = expenses.filter(function (e) { return e.status === 'paid'; });
+    var confirmedIn = sum(approved, function (c) { return c.amount; });
+    var paidOut = sum(paid, function (e) { return e.amount; });
+    return {
+      opening: opening,
+      confirmedIn: confirmedIn,
+      paidOut: paidOut,
+      confirmed: opening + confirmedIn - paidOut,   // the ONLY number called "balance"
+      pendingIn: sum(contributions.filter(function (c) { return c.status === 'pending'; }),
+        function (c) { return c.amount; }),
+      approvedNotPaid: sum(expenses.filter(function (e) { return e.status === 'approved'; }),
+        function (e) { return e.amount; })
+    };
+  }
+
+  // ---------- history ----------
+  function nameOf(profilesById, id) {
+    return profilesById[id] ? profilesById[id].full_name : 'Неизвестно';
+  }
+  function buildTransactions(settings, contributions, expenses, profilesById) {
+    var rows = [];
+    if (settings.setup_done) {
+      rows.push({
+        kind: 'opening', date: settings.start_date, ts: '', amount: settings.opening_balance || 0,
+        label: 'Начальный баланс', who: '', sign: 1, id: 0
+      });
+    }
+    contributions.filter(function (c) { return c.status === 'approved'; }).forEach(function (c) {
+      rows.push({
+        kind: 'contribution', date: c.transfer_date, ts: c.reviewed_at || '', amount: c.amount,
+        label: 'Взнос', who: nameOf(profilesById, c.member_id), sign: 1, id: c.id,
+        checkedBy: nameOf(profilesById, c.reviewed_by), checkedAt: c.reviewed_at, note: c.note || ''
+      });
+    });
+    expenses.filter(function (e) { return e.status === 'paid'; }).forEach(function (e) {
+      rows.push({
+        kind: 'expense', date: localDate(e.paid_at), ts: e.paid_at || '', amount: e.amount,
+        label: e.description, who: nameOf(profilesById, e.requested_by), sign: -1, id: e.id,
+        checkedBy: nameOf(profilesById, e.paid_by), checkedAt: e.paid_at
+      });
+    });
+    rows.sort(function (a, b) {
+      if (a.kind === 'opening' && b.kind !== 'opening') return -1;
+      if (b.kind === 'opening' && a.kind !== 'opening') return 1;
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      if (a.ts !== b.ts) return a.ts < b.ts ? -1 : 1;
+      return a.id - b.id;
+    });
+    var running = 0;
+    rows.forEach(function (r) { running += r.sign * r.amount; r.balanceAfter = running; });
+    return rows;
+  }
+
+  // ---------- monthly report ----------
+  function monthEnd(ym) {
+    var p = ym.split('-').map(Number);
+    var next = p[1] === 12 ? (p[0] + 1) + '-01-01' : p[0] + '-' + pad(p[1] + 1) + '-01';
+    return addDays(next, -1);
+  }
+  function monthlyReport(ym, settings, contributions, expenses, profiles, todayStr) {
+    var start = ym + '-01', end = monthEnd(ym);
+    var byId = {};
+    profiles.forEach(function (p) { byId[p.id] = p; });
+    var tx = buildTransactions(settings, contributions, expenses, byId);
+
+    var openingRow = tx.filter(function (t) { return t.kind === 'opening'; })[0];
+    var startBalance = 0;
+    if (openingRow && openingRow.date <= end) startBalance += openingRow.amount;
+    var inside = [];
+    tx.forEach(function (t) {
+      if (t.kind === 'opening') return;
+      if (t.date < start) startBalance += t.sign * t.amount;
+      else if (t.date <= end) inside.push(t);
+    });
+    var moneyIn = sum(inside.filter(function (t) { return t.sign > 0; }), function (t) { return t.amount; });
+    var moneyOut = sum(inside.filter(function (t) { return t.sign < 0; }), function (t) { return t.amount; });
+
+    var asOf = end < todayStr ? end : todayStr;
+    var perMember = profiles.map(function (p) {
+      var paid = sum(inside.filter(function (t) { return t.kind === 'contribution' && t.who === p.full_name; }),
+        function (t) { return t.amount; });
+      var debt = 0, missed = 0;
+      if (settings.setup_done && asOf >= start) {
+        var s = memberSummary(p.id, settings, contributions, asOf);
+        debt = s.debt; missed = s.missedWeeks;
+      }
+      return { id: p.id, name: p.full_name, paid: paid, debt: debt, missedWeeks: missed };
+    });
+
+    return {
+      month: ym, label: monthLabel(ym), startBalance: startBalance, moneyIn: moneyIn,
+      moneyOut: moneyOut, endBalance: startBalance + moneyIn - moneyOut,
+      transactions: inside, perMember: perMember,
+      rejected: contributions.filter(function (c) {
+        return c.status === 'rejected' && localDate(c.reviewed_at) >= start && localDate(c.reviewed_at) <= end;
+      }).length,
+      beforeStart: !!(openingRow && openingRow.date > end)
+    };
+  }
+
+  // ---------- who may do what (same rules as the database) ----------
+  function isAdmin(p) { return !!p && (p.role === 'main_admin' || p.role === 'assistant_admin'); }
+
+  function canReviewContribution(me, c, profilesById) {
+    if (!me || !c || c.status !== 'pending') return false;
+    if (c.member_id === me.id) return false;                 // never your own
+    var owner = profilesById[c.member_id];
+    if (owner && owner.role === 'main_admin') return true;   // any other friend may check the main admin
+    return isAdmin(me);
+  }
+  function expenseVotes(exp, votes) {
+    var mine = votes.filter(function (v) { return v.expense_id === exp.id; });
+    return {
+      list: mine,
+      approvals: mine.filter(function (v) { return v.vote === 'approve'; }).length,
+      rejections: mine.filter(function (v) { return v.vote === 'reject'; }).length
+    };
+  }
+  function canVote(me, exp, votes) {
+    if (!me || exp.status !== 'voting' || exp.requested_by === me.id) return false;
+    return !votes.some(function (v) { return v.expense_id === exp.id && v.voter_id === me.id; });
+  }
+  function canMarkPaid(me, exp) {
+    return isAdmin(me) && exp.status === 'approved' && exp.requested_by !== me.id;
+  }
+  function canCancelExpense(me, exp) {
+    return !!me && (exp.status === 'voting' || exp.status === 'approved') &&
+      (exp.requested_by === me.id || isAdmin(me));
+  }
+
+  // ---------- reminders shown inside the app ----------
+  function reminders(ctx) {
+    var out = [];
+    var me = ctx.me, s = ctx.settings, t = ctx.today;
+    if (!s.setup_done) {
+      out.push({
+        level: 'warn', tab: 'home',
+        text: me.role === 'main_admin' ? 'Завершите настройку (начальный баланс и дата начала).'
+          : 'Ждём, пока главный администратор завершит настройку.'
+      });
+      return out;
+    }
+    var mine = ctx.summaries[me.id];
+    if (mine) {
+      if (mine.debt > 0) {
+        out.push({
+          level: 'danger', tab: 'payments',
+          text: 'Просрочено: ' + mine.missedWeeks + ' ' + plural(mine.missedWeeks, 'неделя', 'недели', 'недель') +
+            '. К оплате: ' + formatKGS(mine.debt) + '.'
+        });
+      }
+      if (mine.current.remaining > 0) {
+        var left = daysBetween(t, mine.nextDeadline);
+        if (left === 0) {
+          out.push({ level: 'warn', tab: 'payments', text: 'Сегодня срок оплаты. За эту неделю осталось внести: ' + formatKGS(mine.current.remaining) + '.' });
+        } else if (left === 1) {
+          out.push({ level: 'warn', tab: 'payments', text: 'Завтра срок оплаты (' + prettyDate(mine.nextDeadline, true) + '): ' + formatKGS(mine.current.remaining) + '.' });
+        } else {
+          out.push({ level: 'info', tab: 'payments', text: 'Ближайший срок: ' + prettyDate(mine.nextDeadline, true) + ' (через ' + left + ' ' + plural(left, 'день', 'дня', 'дней') + '). За эту неделю: ' + formatKGS(mine.current.remaining) + '.' });
+        }
+      }
+    }
+    var byId = ctx.profilesById;
+    var pendingMine = ctx.contributions.filter(function (c) { return c.status === 'pending' && c.member_id === me.id; }).length;
+    if (pendingMine) out.push({ level: 'info', tab: 'payments', text: 'Ваши платежи ждут проверки: ' + pendingMine + '.' });
+    var toReview = ctx.contributions.filter(function (c) { return canReviewContribution(me, c, byId); }).length;
+    if (toReview) out.push({ level: 'action', tab: 'payments', text: 'Платежей ждут вашей проверки в Simbank: ' + toReview + '.' });
+    var toVote = ctx.expenses.filter(function (e) { return canVote(me, e, ctx.votes); }).length;
+    if (toVote) out.push({ level: 'action', tab: 'expenses', text: 'Запросов на расход ждут вашего голоса: ' + toVote + '.' });
+    var toPay = ctx.expenses.filter(function (e) { return canMarkPaid(me, e); }).length;
+    if (toPay) out.push({ level: 'action', tab: 'expenses', text: 'Одобренных расходов ждут отметки об оплате: ' + toPay + '.' });
+    return out;
+  }
+
+  // ---------- files ----------
+  function toCSV(headers, rows) {
+    function cell(v) {
+      var s = v === null || v === undefined ? '' : String(v);
+      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    return [headers].concat(rows).map(function (r) { return r.map(cell).join(','); }).join('\r\n');
+  }
+
+  return {
+    TZ: TZ, VOTES_NEEDED: VOTES_NEEDED,
+    addDays: addDays, dayOfWeek: dayOfWeek, daysBetween: daysBetween, localDate: localDate, today: today,
+    prettyDate: prettyDate, prettyDateTime: prettyDateTime, monthLabel: monthLabel, monthEnd: monthEnd,
+    formatKGS: formatKGS, plural: plural, firstDeadline: firstDeadline, deadlinesUpTo: deadlinesUpTo,
+    memberSummary: memberSummary, balanceInfo: balanceInfo, buildTransactions: buildTransactions,
+    monthlyReport: monthlyReport, isAdmin: isAdmin, canReviewContribution: canReviewContribution,
+    expenseVotes: expenseVotes, canVote: canVote, canMarkPaid: canMarkPaid,
+    canCancelExpense: canCancelExpense, reminders: reminders, toCSV: toCSV
+  };
+});
+
+</script>
+<script>
+/*
+ * Common Wallet - data layer for the website version.
+ * Talks to the Supabase database. Every rule is checked again by the database
+ * functions (supabase.sql), so the page cannot break the rules.
+ */
+(function () {
+  'use strict';
+  var SUPABASE_URL = 'https://pdzflfmjtawmfbdxqozu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_5tSrl6PN0M2Al46by65ohg_04JgOzpA';
+  var TOKEN_KEY = 'koshelek_token';
+
+  var token = null, changeCb = null, statusCb = null, pollTimer = null;
+  var POLL_MS = 15000;
+
+  function readToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+  function writeToken(t) {
+    token = t || null;
+    try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch (e) { }
+  }
+
+  async function call(fn, args) {
+    var headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY };
+    if (SUPABASE_KEY.indexOf('sb_') !== 0) headers.Authorization = 'Bearer ' + SUPABASE_KEY;
+    var res, text;
+    try {
+      res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+        method: 'POST', headers: headers, body: JSON.stringify(args || {}), cache: 'no-store'
+      });
+      text = await res.text();
+    } catch (e) {
+      var off = new Error('Нет связи с интернетом. Проверьте подключение и попробуйте ещё раз.');
+      off.offline = true;
+      throw off;
+    }
+    var body = null;
+    if (text) { try { body = JSON.parse(text); } catch (e) { body = null; } }
+    if (!res.ok) {
+      var msg;
+      if (body && body.message && body.code === 'P0001') msg = body.message;
+      else msg = 'Ошибка сервера (' + res.status + '). Попробуйте ещё раз.' + (body && body.message ? ' [' + body.message + ']' : '');
+      var err = new Error(msg);
+      if (body && body.hint === 'login') err.needLogin = true;
+      throw err;
+    }
+    return body;
+  }
+
+  function poll() {
+    if (!changeCb || document.visibilityState === 'hidden') return;
+    changeCb();
+  }
+
+  window.API = {
+    init: async function () { token = readToken(); },
+    hasToken: function () { return !!token; },
+    status: function () { return call('wallet_status', {}); },
+    register: async function (login, password, name) {
+      var r = await call('wallet_register', { p_login: login, p_password: password, p_name: name });
+      writeToken(r.token);
+    },
+    login: async function (login, password) {
+      var r = await call('wallet_login', { p_login: login, p_password: password });
+      if (r && r.error) throw new Error(r.error);
+      writeToken(r.token);
+    },
+    logout: async function () {
+      var t = token;
+      writeToken(null);
+      try { await call('wallet_logout', { p_token: t }); } catch (e) { }
+    },
+    forget: function () { writeToken(null); },
+    loadAll: async function () {
+      if (!token) { var e = new Error('Войдите в кошелёк.'); e.needLogin = true; throw e; }
+      return call('wallet_state', { p_token: token });
+    },
+    rpc: async function (name, args) {
+      await call('wallet_' + name, Object.assign({ p_token: token }, args || {}));
+      return null;
+    },
+    subscribe: function (onChange, onStatus) {
+      changeCb = onChange; statusCb = onStatus || null;
+      clearInterval(pollTimer);
+      pollTimer = setInterval(poll, POLL_MS);
+      document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') poll(); });
+      window.addEventListener('online', poll);
+    },
+    setLive: function (ok) { if (statusCb) statusCb(ok); },
+    saveFile: async function (filename, text) {
+      var type = /\.csv$/.test(filename) ? 'text/csv;charset=utf-8' : 'application/json;charset=utf-8';
+      var blob = new Blob([text], { type: type });
+      try {
+        var file = new File([blob], filename, { type: type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: filename }); return; }
+          catch (e) {
+            if (e && e.name === 'AbortError') { var d = new Error('declined'); d.code = 'declined'; throw d; }
+          }
+        }
+      } catch (e) { if (e && e.code === 'declined') throw e; }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 4000);
+    }
+  };
+})();
+</script>
+<script>
+/*
+ * Common Wallet - the screens.
+ * All money rules come from logic.js (and are enforced again by the database).
+ */
+(function () {
+  'use strict';
+  var CW = window.CW, API = window.API;
+  var ROOT = document.getElementById('root');
+
+  var ROLE_NAME = { main_admin: 'Главный администратор', assistant_admin: 'Помощник администратора', member: 'Участник' };
+  var WEEK_TEXT = { paid: 'Оплачено', paid_late: 'Оплачено с опозданием', partial: 'Оплачено частично', overdue: 'Просрочено', due: 'Ещё не оплачено' };
+  var PAY_TEXT = { pending: 'Ждёт проверки', approved: 'Внесён', rejected: 'Отклонён' };
+  var EXP_TEXT = { voting: 'Голосование', approved: 'Одобрен, ещё не оплачен', rejected: 'Отклонён', paid: 'Оплачен', cancelled: 'Отменён' };
+
+  var KIND_RU = { opening: 'начало', contribution: 'платёж', expense: 'расход' };
+  var S = {
+    phase: 'boot', uid: null, data: null, tab: 'home', hist: 'tx', payMember: null, reportMonth: null,
+    modal: null, live: true, busy: false, drafts: {}, showAllPayments: false, loginError: '', bootError: '',
+    loginTab: 'login', hasAdmin: true, pendingMe: null, lastJson: ''
+  };
+  var IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var IS_STANDALONE = window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  function siteLink() { return location.origin + location.pathname; }
+
+  // ---------------------------------------------------------------- helpers
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var money = CW.formatKGS;
+  function chip(kind, text) { return '<span class="chip-s ' + esc(kind) + '">' + esc(text) + '</span>'; }
+  function btn(label, act, attrs, cls) {
+    return '<button class="btn ' + (cls || '') + '" data-act="' + act + '" ' + (attrs || '') + '>' + esc(label) + '</button>';
+  }
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    var host = document.getElementById('toast-host');
+    host.innerHTML = '<div class="toast ' + (isErr ? 'err' : '') + '" role="status">' + esc(msg) + '</div>';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { host.innerHTML = ''; }, isErr ? 6500 : 3200);
+  }
+  function download(filename, text) {
+    API.saveFile(filename, text).then(function () { toast('Файл сохранён.'); }, function (e) {
+      if (e && e.code === 'declined') return;
+      toast('Не удалось сохранить файл. Попробуйте ещё раз.', true);
+    });
+  }
+  function draft(id, fallback) { return S.drafts[id] !== undefined ? S.drafts[id] : fallback; }
+
+  // ---------------------------------------------------------------- numbers for the current screen
+  function derive() {
+    var d = S.data, byId = {};
+    var order = { main_admin: 0, assistant_admin: 1, member: 2 };
+    var profiles = d.profiles.slice().sort(function (a, b) {
+      return order[a.role] - order[b.role] || a.full_name.localeCompare(b.full_name);
+    });
+    profiles.forEach(function (p) { byId[p.id] = p; });
+    var me = byId[S.uid] || null, today = CW.today(), summaries = {};
+    if (d.settings.setup_done) {
+      profiles.forEach(function (p) { summaries[p.id] = CW.memberSummary(p.id, d.settings, d.contributions, today); });
+    }
+    var c = {
+      d: d, byId: byId, profiles: profiles, me: me, today: today, summaries: summaries,
+      bal: CW.balanceInfo(d.settings, d.contributions, d.expenses)
+    };
+    c.toReview = me ? d.contributions.filter(function (x) { return CW.canReviewContribution(me, x, byId); }) : [];
+    c.toVote = me ? d.expenses.filter(function (e) { return CW.canVote(me, e, d.votes); }) : [];
+    c.toPay = me ? d.expenses.filter(function (e) { return CW.canMarkPaid(me, e); }) : [];
+    return c;
+  }
+  function name(c, id) { return c.byId[id] ? c.byId[id].full_name : 'Неизвестно'; }
+
+  // ---------------------------------------------------------------- screens
+  function viewError() {
+    return '<div class="login"><h1>Общий кошелёк</h1><div class="msg danger" style="margin-top:16px">' + esc(S.bootError) +
+      '</div>' + btn('Попробовать снова', 'reload', '', 'full') + '</div>';
+  }
+  function homeScreenTip() {
+    if (IS_STANDALONE) return '';
+    return '<div class="msg info tip">Совет: в Safari нажмите <b>«Поделиться»</b> → <b>«На экран „Домой“»</b>. Кошелёк будет открываться как приложение. Там нужно будет один раз войти по логину и паролю.</div>';
+  }
+  function registerForm(first) {
+    return '<form data-form="register" style="margin-top:14px" autocomplete="on">' +
+      '<label for="r-name">Ваше имя</label><input id="r-name" type="text" maxlength="40" autocomplete="name" value="' + esc(draft('r-name', '')) + '" required>' +
+      '<label for="r-login">Придумайте логин</label><input id="r-login" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="Например: aziz" value="' + esc(draft('r-login', '')) + '" required>' +
+      '<p class="muted small" style="margin-top:4px">От 3 до 20 букв или цифр, без пробелов.</p>' +
+      '<label for="r-pass">Придумайте пароль</label><input id="r-pass" type="password" maxlength="72" autocomplete="new-password" value="' + esc(draft('r-pass', '')) + '" required>' +
+      '<p class="muted small" style="margin-top:4px">Не короче 6 символов. Запомните его.</p>' +
+      '<label for="r-pass2">Повторите пароль</label><input id="r-pass2" type="password" maxlength="72" autocomplete="new-password" value="' + esc(draft('r-pass2', '')) + '" required>' +
+      '<button class="btn full" type="submit">' + (first ? 'Создать кошелёк' : 'Отправить заявку') + '</button></form>';
+  }
+  function viewLogin() {
+    var h = '<div class="login"><h1>Общий кошелёк</h1>';
+    if (!S.hasAdmin) {
+      h += '<p class="muted">Добро пожаловать! Вы первый, поэтому станете <b>главным администратором</b>. Придумайте логин и пароль.</p>' + registerForm(true);
+      return h + '</div>';
+    }
+    h += '<div class="seg" role="tablist">' + [['login', 'Вход'], ['register', 'Я новый участник']].map(function (t) {
+      return '<button data-act="logintab" data-tab="' + t[0] + '" class="' + (S.loginTab === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
+    }).join('') + '</div>';
+    if (S.loginTab === 'login') {
+      h += '<form data-form="login" autocomplete="on">' +
+        '<label for="l-login">Логин</label><input id="l-login" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" value="' + esc(draft('l-login', '')) + '" required>' +
+        '<label for="l-pass">Пароль</label><input id="l-pass" type="password" maxlength="72" autocomplete="current-password" value="' + esc(draft('l-pass', '')) + '" required>' +
+        '<button class="btn full" type="submit">Войти</button></form>' +
+        '<p class="muted small" style="margin-top:12px">Забыли пароль? Попросите главного администратора сбросить его.</p>';
+    } else {
+      h += '<p class="muted">Заполните поля. После этого главный администратор подтвердит вас, и кошелёк откроется.</p>' + registerForm(false);
+    }
+    return h + homeScreenTip() + '</div>';
+  }
+  function viewPending() {
+    var me = S.pendingMe || {};
+    return '<div class="login"><h1>Общий кошелёк</h1>' +
+      '<div class="msg info" style="margin-top:16px">Здравствуйте, <b>' + esc(me.name) + '</b>! Ваша заявка отправлена. Главный администратор должен подтвердить вас. Как только он это сделает, кошелёк откроется сам.</div>' +
+      '<p class="muted small" style="margin-top:8px">Ваш логин: <b>' + esc(me.login) + '</b></p>' +
+      btn('Проверить снова', 'refresh', '', 'full') + btn('Выйти', 'logout', '', 'full ghost') + homeScreenTip() + '</div>';
+  }
+
+  function viewShell(c) {
+    var tabs = [
+      ['home', 'Главная', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>', 0],
+      ['payments', 'Платежи', '<path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/><path d="M3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1"/>', c.toReview.length],
+      ['expenses', 'Расходы', '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/>', c.toVote.length + c.toPay.length],
+      ['history', 'История', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 0],
+      ['more', 'Ещё', '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 0]
+    ];
+    var body = { home: viewHome, payments: viewPayments, expenses: viewExpenses, history: viewHistory, more: viewMore }[S.tab](c);
+    return '<div id="app">' +
+      '<div class="topbar"><span class="brand">Общий кошелёк</span>' +
+      '<span class="who"><span class="sync ' + (S.live ? '' : 'off') + '" title="' + (S.live ? 'На связи' : 'Нет связи, повторим позже') + '"></span><b>' + esc(c.me.full_name) + '</b><br><span class="role">' + ROLE_NAME[c.me.role] + '</span></span></div>' +
+      body + '</div>' +
+      '<nav class="bottom" aria-label="Меню"><div class="inner">' + tabs.map(function (t) {
+        return '<button data-act="tab" data-tab="' + t[0] + '" class="' + (S.tab === t[0] ? 'on' : '') + '"' + (S.tab === t[0] ? ' aria-current="page"' : '') + '>' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true">' + t[2] + '</svg>' + t[1] +
+          (t[3] ? '<span class="badge" aria-label="' + t[3] + ' ждут">' + t[3] + '</span>' : '') + '</button>';
+      }).join('') + '</div></nav>' + viewModal();
+  }
+
+  // ----- HOME
+  function viewHome(c) {
+    var s = c.d.settings, h = '';
+    var names = c.profiles.map(function (p) { return esc(p.full_name.split(' ')[0]); }).join(' · ');
+    h += '<div class="simcard"><div class="top"><span>Общий кошелёк</span><span>Карта Simbank</span></div>' +
+      '<div><div class="chip"></div><div class="lbl">Подтверждённый баланс</div><div class="bal num">' + money(c.bal.confirmed) + '</div></div>' +
+      '<div class="bottom"><span>Общая карта: ' + names + '</span></div></div>';
+    h += '<div class="card-notes">';
+    if (c.bal.pendingIn > 0) h += '<span class="note-chip">Ждут проверки: <b>' + money(c.bal.pendingIn) + '</b></span>';
+    if (c.bal.approvedNotPaid > 0) h += '<span class="note-chip">Одобрено, ещё не оплачено: <b>' + money(c.bal.approvedNotPaid) + '</b></span>';
+    h += '<span class="note-chip">Баланс обновляется сразу после платежа</span></div>';
+
+    if (!s.setup_done) {
+      if (c.me.role === 'main_admin') {
+        h += '<h2>Завершите настройку</h2><div class="panel"><form data-form="setup">' +
+          '<p class="muted">Откройте приложение Simbank и посмотрите, сколько денег на карте <b>прямо сейчас</b>. Введите именно эту сумму. Если начинаете с нуля, введите 0.</p>' +
+          '<label for="su-open">Сумма на карте сейчас (сом)</label><input id="su-open" type="number" inputmode="numeric" min="0" step="1" value="' + esc(draft('su-open', '0')) + '" required>' +
+          '<label for="su-date">Дата начала</label><input id="su-date" type="date" value="' + esc(draft('su-date', c.today)) + '" required>' +
+          '<p class="muted small" id="su-first" style="margin-top:6px">' + firstDeadlineText(draft('su-date', c.today)) + '</p>' +
+          '<button class="btn full" type="submit">Проверить и завершить настройку</button></form></div>';
+      } else {
+        h += '<div class="msg warn" style="margin-top:14px">Главный администратор ещё не завершил настройку. После этого можно будет отправлять платежи.</div>';
+      }
+      return h;
+    }
+
+    var rem = CW.reminders({
+      me: c.me, settings: s, today: c.today, summaries: c.summaries, profilesById: c.byId,
+      contributions: c.d.contributions, expenses: c.d.expenses, votes: c.d.votes
+    });
+    if (rem.length) {
+      h += '<h2>Для вас</h2>' + rem.map(function (r) {
+        return '<button class="msg ' + r.level + '" data-act="tab" data-tab="' + r.tab + '">' + esc(r.text) + '</button>';
+      }).join('');
+    }
+
+    var m = c.summaries[c.me.id];
+    if (m) {
+      var pct = Math.min(100, Math.round(m.current.paid / s.weekly_amount * 100));
+      h += '<h2>Ваша неделя</h2><div class="panel">' +
+        '<div class="row"><div><div class="muted small">Срок оплаты</div><div><b>' + CW.prettyDate(m.nextDeadline, true) + '</b></div></div>' +
+        '<div style="text-align:right"><div class="muted small">Оплачено за неделю</div><div class="num"><b>' + money(Math.min(m.current.paid, s.weekly_amount)) + '</b> из ' + money(s.weekly_amount) + '</div></div></div>' +
+        '<div class="bar" style="margin-top:10px"><i class="' + (pct >= 100 ? 'full' : '') + '" style="width:' + pct + '%"></i></div>';
+      if (m.debt > 0) h += '<p class="bad-text" style="margin-top:10px">Просрочено: ' + money(m.debt) + ' (' + m.missedWeeks + ' ' + CW.plural(m.missedWeeks, 'неделя', 'недели', 'недель') + ')</p>';
+      else if (m.current.remaining === 0) h += '<p class="good-text" style="margin-top:10px">Всё оплачено. Спасибо!</p>';
+      if (m.creditAhead > 0) h += '<p class="muted small" style="margin-top:6px">Оплачено вперёд: ' + money(m.creditAhead) + '</p>';
+      h += btn('Я отправил(а) деньги', 'tab', 'data-tab="payments"', 'full') + btn('Запросить расход', 'tab', 'data-tab="expenses"', 'full ghost') + '</div>';
+    }
+
+    h += '<h2>Все участники</h2><div class="panel tight list">' + c.profiles.map(function (p) {
+      var x = c.summaries[p.id], line;
+      if (x.debt > 0) line = '<span class="bad-text">Долг ' + money(x.debt) + '</span><div class="muted small">' + x.missedWeeks + ' ' + CW.plural(x.missedWeeks, 'пропущенная неделя', 'пропущенные недели', 'пропущенных недель') + '</div>';
+      else if (x.current.remaining === 0) line = '<span class="good-text">Эта неделя оплачена</span>';
+      else line = '<span>На этой неделе осталось: ' + money(x.current.remaining) + '</span>';
+      return '<div class="item row"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · всего внесено ' + money(x.totalApproved) + '</div></div><div style="text-align:right">' + line + '</div></div>';
+    }).join('') + '</div>';
+    return h;
+  }
+  function firstDeadlineText(dateStr) {
+    if (!dateStr) return '';
+    return 'Первый срок оплаты: ' + CW.prettyDate(CW.firstDeadline(dateStr), true) + '. Срок оплаты — каждая суббота.';
+  }
+
+  // ----- PAYMENTS
+  function viewPayments(c) {
+    var s = c.d.settings, h = '';
+    if (!s.setup_done) return '<div class="msg warn" style="margin-top:14px">Настройка ещё не завершена.</div>';
+
+    h += '<h2>Я отправил(а) деньги</h2><div class="panel"><form data-form="payment">' +
+      '<p class="muted">Сначала переведите деньги на общую карту Simbank. Затем укажите здесь точную сумму. Баланс обновится сразу.</p>' +
+      '<label for="p-amount">Сколько вы отправили (сом)</label><input id="p-amount" type="number" inputmode="numeric" min="1" step="1" placeholder="1000" value="' + esc(draft('p-amount', '')) + '" required>' +
+      '<label for="p-date">Дата перевода</label><input id="p-date" type="date" max="' + c.today + '" value="' + esc(draft('p-date', c.today)) + '" required>' +
+      '<label for="p-note">Заметка (необязательно)</label><input id="p-note" type="text" maxlength="120" placeholder="Например: за 2 недели" value="' + esc(draft('p-note', '')) + '">' +
+      '<button class="btn full" type="submit">Внести в кошелёк</button></form></div>';
+
+    if (c.toReview.length) {
+      h += '<h2>Ждут вашей проверки</h2>' + c.toReview.map(function (x) {
+        return '<div class="panel"><div class="row top"><div><b>' + esc(name(c, x.member_id)) + '</b><div class="muted small">Отправлено: ' + CW.prettyDate(x.transfer_date, true) + '</div>' +
+          (x.note ? '<div class="small">' + esc(x.note) + '</div>' : '') + '</div><div class="big num">' + money(x.amount) + '</div></div>' +
+          '<p class="muted small" style="margin-top:8px">Откройте приложение Simbank и найдите именно эту сумму.</p>' +
+          '<div class="btns">' + btn('Деньги пришли', 'review', 'data-id="' + x.id + '" data-ok="1"', 'good') + btn('Не найдено', 'review', 'data-id="' + x.id + '" data-ok="0"', 'bad') + '</div></div>';
+      }).join('');
+    }
+
+    var pid = c.byId[S.payMember] ? S.payMember : c.me.id, sm = c.summaries[pid];
+    h += '<h2>Еженедельные взносы</h2><div class="seg" role="tablist">' + c.profiles.map(function (p) {
+      return '<button data-act="paymember" data-id="' + p.id + '" class="' + (p.id === pid ? 'on' : '') + '">' + esc(p.full_name.split(' ')[0]) + '</button>';
+    }).join('') + '</div>';
+    h += '<div class="panel"><dl class="kv"><dt>Всего внесено</dt><dd class="num">' + money(sm.totalApproved) + '</dd>' +
+      '<dt>Пропущено недель</dt><dd>' + sm.missedWeeks + '</dd>' +
+      '<dt class="total">Долг (просрочено)</dt><dd class="num total ' + (sm.debt ? 'bad-text' : 'good-text') + '">' + money(sm.debt) + '</dd>' +
+      (sm.creditAhead ? '<dt>Оплачено вперёд</dt><dd class="num">' + money(sm.creditAhead) + '</dd>' : '') + '</dl></div>';
+    h += '<div class="panel tight list">' + sm.weeks.slice().reverse().map(function (w) {
+      var detail = w.status === 'paid_late' ? 'Закрыто ' + CW.prettyDate(w.completedOn) :
+        w.paid > 0 && w.status !== 'paid' ? money(w.paid) + ' из ' + money(w.due) + ' оплачено' :
+          w.status === 'overdue' ? 'долг ' + money(w.remaining) : w.status === 'due' ? 'к оплате ' + money(w.remaining) : '';
+      return '<div class="item row"><div><b>' + CW.prettyDate(w.deadline, true) + '</b><div class="muted small">' + esc(detail) + '</div></div>' + chip(w.status, WEEK_TEXT[w.status]) + '</div>';
+    }).join('') + '</div>';
+
+    var all = c.d.contributions.slice().sort(function (a, b) { return b.id - a.id; });
+    var shown = S.showAllPayments ? all : all.slice(0, 15);
+    h += '<h2>Все платежи</h2>';
+    if (!all.length) h += '<div class="panel empty">Платежей пока нет. Первый появится здесь.</div>';
+    else {
+      h += '<div class="panel tight list">' + shown.map(function (x) {
+        var line = '';
+        if (x.status === 'rejected') line = (x.status === 'approved' ? 'Подтвердил(а): ' : 'Отклонил(а): ') + '' + esc(name(c, x.reviewed_by)) + ' · ' + CW.prettyDateTime(x.reviewed_at);
+        return '<div class="item"><div class="row top"><div><b>' + esc(name(c, x.member_id)) + '</b> <span class="num">' + money(x.amount) + '</span>' +
+          '<div class="muted small">Отправлено ' + CW.prettyDate(x.transfer_date, true) + (x.note ? ' · ' + esc(x.note) : '') + '</div></div>' + chip(x.status, PAY_TEXT[x.status]) + '</div>' +
+          (line ? '<div class="muted small" style="margin-top:4px">' + line + (x.review_note ? ' · “' + esc(x.review_note) + '”' : '') + '</div>' : '') + '</div>';
+      }).join('') + '</div>';
+      if (all.length > 15) h += btn(S.showAllPayments ? 'Показать меньше' : 'Показать все (' + all.length + ')', 'togglepay', '', 'ghost full');
+    }
+    return h;
+  }
+
+  // ----- EXPENSES
+  function viewExpenses(c) {
+    var s = c.d.settings, h = '';
+    if (!s.setup_done) return '<div class="msg warn" style="margin-top:14px">Настройка ещё не завершена.</div>';
+    h += '<h2>' + (c.me.role === 'member' ? 'Запрос на расход' : 'Новый расход') + '</h2><div class="panel"><form data-form="expense">' +
+      '<p class="muted">' + (c.me.role === 'member' ? 'Сначала запросите, потом тратьте. Двое из трёх остальных друзей должны одобрить. Программа не переводит деньги: вы платите сами через Simbank.' : 'Вы администратор: расход записывается сразу, баланс уменьшается. Программа не переводит деньги: заплатите сами через Simbank.') + '</p>' +
+      '<label for="e-amount">Сумма (сом)</label><input id="e-amount" type="number" inputmode="numeric" min="1" step="1" value="' + esc(draft('e-amount', '')) + '" required>' +
+      '<label for="e-desc">На что?</label><input id="e-desc" type="text" maxlength="200" placeholder="Например: подарок другу" value="' + esc(draft('e-desc', '')) + '" required>' +
+      '<button class="btn full" type="submit">' + (c.me.role === 'member' ? 'Отправить запрос' : 'Записать расход') + '</button></form></div>';
+
+    var active = { voting: 0, approved: 0 };
+    var list = c.d.expenses.slice().sort(function (a, b) {
+      var pa = active[a.status] === 0 ? 0 : 1, pb = active[b.status] === 0 ? 0 : 1;
+      return pa - pb || b.id - a.id;
+    });
+    h += '<h2>Запросы</h2>';
+    if (!list.length) return h + '<div class="panel empty">Запросов пока нет.</div>';
+    h += list.map(function (e) {
+      var v = CW.expenseVotes(e, c.d.votes);
+      var others = c.profiles.filter(function (p) { return p.id !== e.requested_by; });
+      var line = '<div class="row top"><div><b>' + esc(e.description) + '</b><div class="muted small">Запросил(а): ' + esc(name(c, e.requested_by)) + ' · ' + CW.prettyDate(CW.localDate(e.created_at)) + '</div></div>' +
+        '<div style="text-align:right"><div class="big num" style="font-size:20px">' + money(e.amount) + '</div>' + chip(e.status, EXP_TEXT[e.status]) + '</div></div>';
+      var voters = '';
+      if (v.list.length || e.status === 'voting') {
+        voters = '<div class="voters">' + v.list.map(function (x) {
+          return (x.vote === 'approve' ? '✔ ' : '✘ ') + esc(name(c, x.voter_id)) + ' ' + (x.vote === 'approve' ? 'одобрил(а)' : 'отклонил(а)') + ' · ' + CW.prettyDate(CW.localDate(x.created_at));
+        }).join('<br>');
+        if (e.status === 'voting') {
+          var waiting = others.filter(function (p) { return !v.list.some(function (x) { return x.voter_id === p.id; }); });
+          voters += (v.list.length ? '<br>' : '') + 'Одобрений: <b>' + v.approvals + ' из ' + CW.VOTES_NEEDED + '</b>' + (waiting.length ? ' · ждём: ' + waiting.map(function (p) { return esc(p.full_name.split(' ')[0]); }).join(', ') : '');
+        }
+        voters += '</div>';
+      }
+      var extra = '';
+      if (e.status === 'approved') extra = '<p class="small" style="margin-top:8px">Одобрено. Оплатите из Simbank. Затем администратор проверит платёж и отметит оплаченным. Баланс изменится только после этого.</p>';
+      if (e.status === 'paid') extra = '<p class="muted small" style="margin-top:8px">Оплачено. Отметил(а): ' + esc(name(c, e.paid_by)) + ' · ' + CW.prettyDateTime(e.paid_at) + (e.paid_note ? ' · “' + esc(e.paid_note) + '”' : '') + '</p>';
+      var b = '';
+      if (CW.canVote(c.me, e, c.d.votes)) b += btn('Одобрить', 'vote', 'data-id="' + e.id + '" data-ok="1"', 'good') + btn('Отклонить', 'vote', 'data-id="' + e.id + '" data-ok="0"', 'bad');
+      if (CW.canMarkPaid(c.me, e)) b += btn('Отметить оплаченным', 'paid', 'data-id="' + e.id + '"');
+      if (CW.canCancelExpense(c.me, e)) b += btn('Отменить запрос', 'cancelexp', 'data-id="' + e.id + '"', 'ghost');
+      return '<div class="panel">' + line + voters + extra + (b ? '<div class="btns">' + b + '</div>' : '') + '</div>';
+    }).join('');
+    return h;
+  }
+
+  // ----- HISTORY
+  function viewHistory(c) {
+    var s = c.d.settings, h = '<div class="seg">' + [['tx', 'Деньги'], ['report', 'Отчёт за месяц'], ['log', 'Действия']].map(function (t) {
+      return '<button data-act="hist" data-hist="' + t[0] + '" class="' + (S.hist === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
+    }).join('') + '</div>';
+    if (!s.setup_done) return h + '<div class="msg warn">Настройка ещё не завершена.</div>';
+
+    if (S.hist === 'tx') {
+      var tx = CW.buildTransactions(s, c.d.contributions, c.d.expenses, c.byId);
+      h += '<div class="row noprint" style="margin-bottom:10px"><span class="muted">Все платежи и расходы.</span>' + btn('Сохранить файл', 'csv-tx', '', 'sm ghost') + '</div>';
+      h += '<div class="panel tight list">' + tx.slice().reverse().map(function (t) {
+        var meta = t.kind === 'opening' ? 'Начальная сумма на карте' :
+          (t.kind === 'contribution' ? 'От: ' : 'Запросил(а): ') + esc(t.who) + (t.checkedBy && t.kind === 'expense' ? ' · отметил(а): ' + esc(t.checkedBy) + ', ' + CW.prettyDateTime(t.checkedAt) : '');
+        return '<div class="item row top"><div><b>' + esc(t.label) + '</b><div class="muted small">' + CW.prettyDate(t.date, true) + ' · ' + meta + '</div></div>' +
+          '<div style="text-align:right"><div class="num ' + (t.sign > 0 ? 'plus' : 'minus') + '">' + (t.sign > 0 ? '+' : '−') + money(t.amount) + '</div><div class="muted small num">Баланс ' + money(t.balanceAfter) + '</div></div></div>';
+      }).join('') + '</div>';
+    } else if (S.hist === 'report') {
+      var months = [], cur = c.today.slice(0, 7), startYm = s.start_date.slice(0, 7);
+      for (var y = +cur.slice(0, 4), m = +cur.slice(5); ; ) {
+        var ym = y + '-' + String(m).padStart(2, '0'); months.push(ym);
+        if (ym <= startYm || months.length > 120) break;
+        m--; if (m === 0) { m = 12; y--; }
+      }
+      var ymSel = months.indexOf(S.reportMonth) >= 0 ? S.reportMonth : months[0];
+      var r = CW.monthlyReport(ymSel, s, c.d.contributions, c.d.expenses, c.profiles, c.today);
+      h += '<div class="row noprint"><select id="r-month" data-change="month" aria-label="Месяц">' + months.map(function (ym) {
+        return '<option value="' + ym + '"' + (ym === ymSel ? ' selected' : '') + '>' + CW.monthLabel(ym) + '</option>';
+      }).join('') + '</select></div>';
+      h += '<h2>' + r.label + '</h2><div class="panel"><dl class="kv"><dt>Баланс на начало</dt><dd class="num">' + money(r.startBalance) + '</dd>' +
+        '<dt>Поступило (платежи)</dt><dd class="num plus">+' + money(r.moneyIn) + '</dd>' +
+        '<dt>Потрачено (оплаченные расходы)</dt><dd class="num minus">−' + money(r.moneyOut) + '</dd>' +
+        '<dt class="total"><b>Баланс на конец</b></dt><dd class="num total">' + money(r.endBalance) + '</dd></dl>' +
+        (r.rejected ? '<p class="muted small" style="margin-top:8px">' + 'Отклонено платежей за месяц: ' + r.rejected + '.</p>' : '') + '</div>';
+      h += '<h2>Каждый друг</h2><div class="panel tight list">' + r.perMember.map(function (p) {
+        return '<div class="item row"><div><b>' + esc(p.name) + '</b><div class="muted small">Внесено за месяц: ' + money(p.paid) + '</div></div>' +
+          '<div style="text-align:right" class="' + (p.debt ? 'bad-text' : 'good-text') + '">' + (p.debt ? 'Долг: ' + money(p.debt) + '<div class="small">' + p.missedWeeks + ' ' + CW.plural(p.missedWeeks, 'пропущенная неделя', 'пропущенные недели', 'пропущенных недель') + '</div>' : 'Долгов нет') + '</div></div>';
+      }).join('') + '</div>';
+      h += '<h2>Движение денег</h2>' + (r.transactions.length ? '<div class="panel tight list">' + r.transactions.map(function (t) {
+        return '<div class="item row"><div><b>' + esc(t.label) + '</b><div class="muted small">' + CW.prettyDate(t.date, true) + ' · ' + esc(t.who) + '</div></div><div class="num ' + (t.sign > 0 ? 'plus' : 'minus') + '">' + (t.sign > 0 ? '+' : '−') + money(t.amount) + '</div></div>';
+      }).join('') + '</div>' : '<div class="panel empty">В этом месяце денег не двигалось.</div>');
+      h += '<div class="btns noprint">' + btn('Сохранить файл', 'csv-report', 'data-month="' + ymSel + '"', 'ghost') + '</div>';
+    } else {
+      h += '<p class="muted" style="margin-bottom:10px">Кто что сделал и когда. Этот список нельзя изменить или удалить.</p>';
+      h += c.d.log.length ? '<div class="panel tight list">' + c.d.log.map(function (l) {
+        return '<div class="item"><div>' + esc(l.details) + '</div><div class="muted small">' + CW.prettyDateTime(l.created_at) + '</div></div>';
+      }).join('') + '</div>' : '<div class="panel empty">Пока ничего не происходило.</div>';
+    }
+    return h;
+  }
+
+  // ----- MORE
+  function viewMore(c) {
+    var h = '';
+    var pend = c.d.pending || [];
+    if (c.me.role === 'main_admin' && pend.length) {
+      h += '<h2>Заявки на вступление</h2><div class="panel tight list">' + pend.map(function (p) {
+        return '<div class="item"><div><b>' + esc(p.name) + '</b><div class="muted small">Логин: ' + esc(p.login) + ' · ' + CW.prettyDateTime(p.created_at) + '</div></div>' +
+          '<div class="btns">' + btn('Принять', 'member-ok', 'data-id="' + esc(p.id) + '"', 'good sm') + btn('Отклонить', 'member-no', 'data-id="' + esc(p.id) + '"', 'bad sm') + '</div></div>';
+      }).join('') + '</div>';
+    }
+    h += '<h2>Ваш профиль</h2><div class="panel"><div><b>' + esc(c.me.full_name) + '</b></div><div class="muted">' + ROLE_NAME[c.me.role] + ' · логин: ' + esc(c.me.login || '') + '</div>' +
+      btn('Сменить пароль', 'chpass-open', '', 'full ghost') + btn('Выйти', 'logout', '', 'full ghost') + '</div>';
+    if (S.showChPass) {
+      h += '<div class="panel"><form data-form="chpass"><h3>Сменить пароль</h3>' +
+        '<label for="cp-old">Старый пароль</label><input id="cp-old" type="password" maxlength="72" autocomplete="current-password" required>' +
+        '<label for="cp-new">Новый пароль</label><input id="cp-new" type="password" maxlength="72" autocomplete="new-password" required>' +
+        '<label for="cp-new2">Повторите новый пароль</label><input id="cp-new2" type="password" maxlength="72" autocomplete="new-password" required>' +
+        '<button class="btn full" type="submit">Сохранить пароль</button></form></div>';
+    }
+    if (c.me.role === 'main_admin') {
+      var others = c.profiles.filter(function (p) { return p.id !== c.me.id; });
+      h += '<h2>Участники</h2><div class="panel tight list">' + c.profiles.map(function (p) {
+        return '<div class="item row"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · логин: ' + esc(p.login || '') + '</div></div>' +
+          (p.id !== c.me.id ? btn('Сбросить пароль', 'resetpass', 'data-id="' + esc(p.id) + '"', 'ghost sm') : '') + '</div>';
+      }).join('') + '</div>';
+      if (!others.length) h += '<p class="muted small">Друзья пока не вошли.</p>';
+    }
+    if (c.me.role === 'main_admin') {
+      var cands = c.profiles.filter(function (p) { return p.role !== 'main_admin'; });
+      var cur = cands.filter(function (p) { return p.role === 'assistant_admin'; })[0];
+      h += '<h2>Помощник администратора</h2><div class="panel"><p class="muted">Выберите друга, который поможет проверять платежи в Simbank.</p>' +
+        (cands.length ? '<label for="as-sel">Помощник</label><select id="as-sel" data-change="assistant"><option value="">Пока никто</option>' + cands.map(function (p) {
+          return '<option value="' + esc(p.id) + '"' + (cur && cur.id === p.id ? ' selected' : '') + '>' + esc(p.full_name) + '</option>';
+        }).join('') + '</select>' : '<p class="small">Больше никто пока не вошёл.</p>') + '</div>';
+      h += '<h2>Пригласите друзей</h2><div class="panel small stack"><p>Уже в кошельке: <b>' + c.profiles.length + ' из 4</b>.</p>' +
+        '<p>Отправьте друзьям эту ссылку:</p><div class="linkbox">' + esc(siteLink()) + '</div>' +
+        '<div class="btns">' + btn('Отправить ссылку', 'sharelink', '', 'sm') + btn('Скопировать', 'copylink', '', 'sm ghost') + '</div>' +
+        '<p>Друг открывает ссылку в Safari, нажимает <b>«Я новый участник»</b> и придумывает логин и пароль. Потом его заявка появится здесь, вверху. Нажмите <b>«Принять»</b>.</p></div>';
+    }
+    h += '<h2>Приложение на телефоне</h2><div class="panel small stack">' +
+      '<p>В Safari нажмите <b>«Поделиться»</b> (квадрат со стрелкой) → <b>«На экран „Домой“»</b> → <b>«Добавить»</b>.</p>' +
+      '<p>На экране появится иконка «Кошелёк». Откройте её и один раз войдите по логину и паролю.</p></div>';
+    h += '<h2>Резервная копия</h2><div class="panel"><p class="muted">Сохраните копию всех данных кошелька на телефон или компьютер. Делайте это примерно раз в месяц и храните файл в надёжном месте.</p>' +
+      btn('Скачать резервную копию', 'backup', '', 'full') + '</div>';
+    h += '<h2>Как работает кошелёк</h2><div class="panel small stack">' +
+      '<p>• Каждый друг вносит <b>' + money(c.d.settings.weekly_amount) + '</b> каждую неделю. Срок — суббота.</p>' +
+      '<p>• Программа <b>не</b> подключена к Simbank: суммы вносите вы сами, поэтому вносите только настоящие переводы.</p>' +
+      '<p>• Платежи учитываются сразу, без подтверждения.</p>' +
+      '<p>• Администратор записывает расход сразу. Расход участника должны одобрить двое друзей, потом администратор отмечает его оплаченным.</p>' +
+      '<p>• Пропущенные недели копятся как долг. Штрафов нет.</p></div>';
+    return h;
+  }
+
+  // ----- popup
+  function viewModal() {
+    var m = S.modal; if (!m) return '';
+    return '<div class="modal-bg" data-act="closemodal-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="' + esc(m.title) + '"><h3>' + esc(m.title) + '</h3>' +
+      '<div>' + m.body + '</div>' +
+      (m.input ? '<label for="m-input">' + esc(m.input.label) + '</label><input id="m-input" type="text" maxlength="120" placeholder="' + esc(m.input.placeholder || '') + '" value="' + esc(draft('m-input', '')) + '">' : '') +
+      (m.check ? '<label class="check"><input type="checkbox" id="m-check"' + (draft('m-check', false) ? ' checked' : '') + '><span>' + esc(m.check) + '</span></label>' : '') +
+      '<div class="btns"><button class="btn ghost" data-act="closemodal">Назад</button>' +
+      '<button class="btn ' + (m.cls || '') + '" data-act="confirm" id="m-ok"' + (m.check && !draft('m-check', false) ? ' disabled' : '') + '>' + esc(m.confirm) + '</button></div></div></div>';
+  }
+  function openModal(m) { S.drafts['m-input'] = undefined; S.drafts['m-check'] = undefined; S.modal = m; render(); }
+  function closeModal() { S.modal = null; S.drafts['m-input'] = undefined; S.drafts['m-check'] = undefined; render(); }
+
+  // ---------------------------------------------------------------- drawing
+  function render() {
+    var active = document.activeElement, focusId = active && active.id, selStart = null, selEnd = null;
+    try { if (active && active.selectionStart !== undefined) { selStart = active.selectionStart; selEnd = active.selectionEnd; } } catch (e) { }
+    var scroll = window.scrollY, html;
+    if (S.phase === 'boot') html = '';
+    else if (S.phase === 'error') html = viewError();
+    else if (S.phase === 'login') html = viewLogin();
+    else if (S.phase === 'pending') html = viewPending();
+    else if (S.phase === 'app' && !S.data) html = '<div class="login"><h1>Общий кошелёк</h1><p class="muted">Загрузка кошелька…</p></div>';
+    else if (S.phase === 'app') {
+      var c = derive();
+      html = c.me ? viewShell(c) : '<div class="login"><h1>Общий кошелёк</h1><p class="muted">Загрузка кошелька…</p></div>';
+    }
+    ROOT.innerHTML = html;
+    // put back what the person was typing
+    Object.keys(S.drafts).forEach(function (id) {
+      var el = document.getElementById(id), v = S.drafts[id];
+      if (!el || v === undefined) return;
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+    });
+    if (focusId) {
+      var f = document.getElementById(focusId);
+      if (f) { f.focus(); try { if (selStart !== null) f.setSelectionRange(selStart, selEnd); } catch (e) { } }
+    }
+    window.scrollTo(0, scroll);
+  }
+
+  // ---------------------------------------------------------------- loading & actions
+  function applyData(d) {
+    var j = JSON.stringify(d), changed = j !== S.lastJson;
+    S.lastJson = j;
+    S.uid = d.me.id;
+    if (d.me.status !== 'active') { S.phase = 'pending'; S.pendingMe = d.me; S.data = null; }
+    else { S.phase = 'app'; S.pendingMe = null; S.data = d; }
+    return changed;
+  }
+  async function reload(silent) {
+    try {
+      var before = S.phase, changed = applyData(await API.loadAll());
+      if (!S.live) { S.live = true; changed = true; }
+      if (changed || !silent || before !== S.phase) render();
+    } catch (e) {
+      if (e.needLogin) { API.forget(); await toLogin(); if (!silent) toast(e.message, true); return; }
+      if (e.offline && S.live) { S.live = false; render(); }
+      if (!silent) toast(e.message, true);
+    }
+  }
+  var reloadTimer = null;
+  function reloadSoon() { clearTimeout(reloadTimer); reloadTimer = setTimeout(function () { reload(true); }, 350); }
+
+  async function run(fn, okMessage) {
+    if (S.busy) return false;
+    S.busy = true;
+    try { await fn(); await reload(); if (okMessage) toast(okMessage); return true; }
+    catch (e) {
+      if (e.needLogin) { API.forget(); await toLogin(); }
+      toast(e.message, true); return false;
+    }
+    finally { S.busy = false; }
+  }
+  function clearDrafts(ids) { ids.forEach(function (i) { S.drafts[i] = undefined; }); }
+
+  async function toLogin() {
+    S.phase = 'login'; S.data = null; S.uid = null; S.pendingMe = null; S.lastJson = ''; S.modal = null;
+    S.tab = 'home'; S.showChPass = false;
+    try { var st = await API.status(); S.hasAdmin = !!(st && st.has_admin); }
+    catch (e) { S.phase = 'error'; S.bootError = e.message; }
+    render();
+  }
+
+  async function boot() {
+    await API.init();
+    API.subscribe(function () { if (S.phase === 'app' || S.phase === 'pending') reloadSoon(); });
+    if (!API.hasToken()) return toLogin();
+    try { applyData(await API.loadAll()); }
+    catch (e) {
+      if (e.needLogin) { API.forget(); return toLogin(); }
+      S.phase = 'error'; S.bootError = e.message;
+    }
+  }
+
+  // ---------------------------------------------------------------- clicks and typing
+  document.addEventListener('input', function (ev) {
+    var el = ev.target;
+    if (!el.id) return;
+    S.drafts[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    if (el.id === 'su-date') { var n = document.getElementById('su-first'); if (n) n.textContent = firstDeadlineText(el.value); }
+    if (el.id === 'm-check') { var ok = document.getElementById('m-ok'); if (ok) ok.disabled = !el.checked; }
+  });
+  document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.getAttribute && el.getAttribute('data-change') === 'month') { S.reportMonth = el.value; render(); }
+    if (el.getAttribute && el.getAttribute('data-change') === 'assistant') { run(function () { return API.rpc('set_assistant', { p_id: el.value }); }, 'Сохранено.'); }
+    if (el.id === 'm-check') { var ok = document.getElementById('m-ok'); if (ok) ok.disabled = !el.checked; }
+  });
+
+  document.addEventListener('submit', async function (ev) {
+    var form = ev.target.getAttribute('data-form');
+    if (!form) return;
+    ev.preventDefault();
+    var c = S.phase === 'app' && S.data ? derive() : null;
+
+    function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+    if (form === 'login') {
+      var lg = val('l-login').trim(), pw = val('l-pass');
+      if (!lg || !pw) return toast('Введите логин и пароль.', true);
+      var okl = await run(function () { return API.login(lg, pw); }, null);
+      if (okl) { clearDrafts(['l-login', 'l-pass']); render(); }
+    }
+
+    if (form === 'register') {
+      var rn = val('r-name').trim(), rl = val('r-login').trim(), rp = val('r-pass'), rp2 = val('r-pass2');
+      if (!rn) return toast('Введите своё имя.', true);
+      if (!rl) return toast('Придумайте логин.', true);
+      if (rp.length < 6) return toast('Пароль должен быть не короче 6 символов.', true);
+      if (rp !== rp2) return toast('Пароли не совпадают. Введите ещё раз.', true);
+      var first = !S.hasAdmin;
+      var okr = await run(function () { return API.register(rl, rp, rn); },
+        first ? 'Кошелёк создан. Вы главный администратор.' : 'Заявка отправлена.');
+      if (okr) { clearDrafts(['r-name', 'r-login', 'r-pass', 'r-pass2']); render(); }
+    }
+
+    if (form === 'chpass') {
+      var po = val('cp-old'), pn = val('cp-new'), pn2 = val('cp-new2');
+      if (pn.length < 6) return toast('Новый пароль должен быть не короче 6 символов.', true);
+      if (pn !== pn2) return toast('Новые пароли не совпадают.', true);
+      var okc = await run(function () { return API.rpc('change_password', { p_old_password: po, p_new_password: pn }); }, 'Пароль изменён.');
+      if (okc) { clearDrafts(['cp-old', 'cp-new', 'cp-new2']); S.showChPass = false; render(); }
+    }
+
+    if (form === 'payment') {
+      var amount = parseInt(S.drafts['p-amount'] || document.getElementById('p-amount').value, 10);
+      var date = document.getElementById('p-date').value, note = document.getElementById('p-note').value;
+      if (!(amount > 0)) return toast('Введите сумму, которую вы отправили.', true);
+      var okp = await run(function () { return API.rpc('submit_contribution', { p_amount: amount, p_transfer_date: date, p_note: note }); },
+        'Готово! Платёж внесён, баланс обновлён.');
+      if (okp) { clearDrafts(['p-amount', 'p-note', 'p-date']); render(); }
+    }
+
+    if (form === 'expense') {
+      var eamount = parseInt(document.getElementById('e-amount').value, 10), desc = document.getElementById('e-desc').value;
+      if (!(eamount > 0)) return toast('Введите сумму.', true);
+      var oke = await run(function () { return API.rpc('submit_expense', { p_amount: eamount, p_description: desc }); },
+        (c && c.me.role !== 'member' ? 'Расход записан. Баланс обновлён.' : 'Запрос отправлен. Друзья могут голосовать.'));
+      if (oke) { clearDrafts(['e-amount', 'e-desc']); render(); }
+    }
+
+    if (form === 'setup') {
+      var open = parseInt(document.getElementById('su-open').value, 10), sd = document.getElementById('su-date').value;
+      if (!(open >= 0) || !sd) return toast('Заполните оба поля.', true);
+      openModal({
+        title: 'Завершить настройку?', confirm: 'Завершить', cls: 'good',
+        body: '<dl class="kv"><dt>Деньги на карте</dt><dd class="num">' + money(open) + '</dd><dt>Дата начала</dt><dd>' + CW.prettyDate(sd, true) + '</dd><dt>Первый срок</dt><dd>' + CW.prettyDate(CW.firstDeadline(sd), true) + '</dd></dl>' +
+          '<p class="muted" style="margin-top:10px">Потом это изменить нельзя.</p>',
+        check: 'Я проверил(а) приложение Simbank, это реальная сумма на карте.',
+        action: function () { return run(function () { return API.rpc('setup_app', { p_opening_balance: open, p_start_date: sd }); }, 'Настройка завершена. Можно начинать.'); }
+      });
+    }
+
+  });
+
+  document.addEventListener('click', async function (ev) {
+    var t = ev.target.closest('[data-act]');
+    if (!t) return;
+    var act = t.getAttribute('data-act');
+    if (act === 'closemodal-bg') { if (ev.target === t) closeModal(); return; }
+    var id = t.getAttribute('data-id'), c = S.phase === 'app' && S.data ? derive() : null;
+
+    switch (act) {
+      case 'reload': location.reload(); break;
+      case 'tab': S.tab = t.getAttribute('data-tab'); render(); window.scrollTo(0, 0); break;
+      case 'hist': S.hist = t.getAttribute('data-hist'); render(); break;
+      case 'paymember': S.payMember = id; render(); break;
+      case 'togglepay': S.showAllPayments = !S.showAllPayments; render(); break;
+      case 'closemodal': closeModal(); break;
+      case 'refresh': reload(); break;
+      case 'logintab': S.loginTab = t.getAttribute('data-tab'); render(); break;
+      case 'chpass-open': S.showChPass = !S.showChPass; render(); break;
+
+      case 'logout':
+        openModal({
+          title: 'Выйти из кошелька?', confirm: 'Выйти', cls: 'bad',
+          body: '<p class="muted">Чтобы войти снова, понадобятся логин и пароль.</p>',
+          action: async function () { await API.logout(); S.drafts = {}; await toLogin(); }
+        });
+        break;
+
+      case 'member-ok':
+      case 'member-no': {
+        var pm = (c.d.pending || []).filter(function (q) { return String(q.id) === id; })[0], yes = act === 'member-ok';
+        if (!pm) return;
+        openModal({
+          title: yes ? 'Принять в кошелёк?' : 'Отклонить заявку?', cls: yes ? 'good' : 'bad', confirm: yes ? 'Принять' : 'Отклонить',
+          body: '<p><b>' + esc(pm.name) + '</b> (логин: ' + esc(pm.login) + ')</p><p class="muted" style="margin-top:6px">' +
+            (yes ? 'Этот человек увидит кошелёк и сможет вносить платежи.' : 'Заявка будет удалена. Человек не увидит кошелёк.') + '</p>',
+          check: yes ? 'Я знаю этого человека, это мой друг.' : null,
+          action: function () {
+            return run(function () { return API.rpc(yes ? 'approve_member' : 'reject_member', { p_id: pm.id }); }, yes ? pm.name + ' теперь в кошельке.' : 'Заявка отклонена.');
+          }
+        });
+        break;
+      }
+
+      case 'resetpass': {
+        var rpM = c.byId[id];
+        if (!rpM) return;
+        openModal({
+          title: 'Сбросить пароль?', confirm: 'Сбросить', cls: 'bad',
+          body: '<p>Новый пароль для <b>' + esc(rpM.full_name) + '</b> (логин: ' + esc(rpM.login || '') + ').</p><p class="muted" style="margin-top:6px">Потом скажите другу этот пароль. Он сможет поменять его в разделе «Ещё».</p>',
+          input: { label: 'Новый пароль (не короче 6 символов)', placeholder: '' },
+          action: function (np) {
+            np = String(np || '').trim();
+            if (np.length < 6) { toast('Пароль должен быть не короче 6 символов.', true); return; }
+            return run(function () { return API.rpc('reset_password', { p_id: rpM.id, p_new_password: np }); }, 'Пароль сброшен. Новый пароль: ' + np);
+          }
+        });
+        break;
+      }
+
+      case 'sharelink':
+        if (navigator.share) {
+          try { await navigator.share({ title: 'Общий кошелёк', text: 'Наш общий кошелёк. Нажмите «Я новый участник» и придумайте логин и пароль.', url: siteLink() }); } catch (e) { }
+          break;
+        }
+        /* falls through */
+      case 'copylink':
+        try { await navigator.clipboard.writeText(siteLink()); toast('Ссылка скопирована.'); }
+        catch (e) { toast('Не получилось скопировать. Выделите ссылку и скопируйте её вручную.', true); }
+        break;
+
+      case 'confirm':
+        if (S.modal) {
+          var m = S.modal, text = (document.getElementById('m-input') || {}).value || '';
+          if (m.check && !(document.getElementById('m-check') || {}).checked) return;
+          S.modal = null; S.drafts['m-input'] = undefined; S.drafts['m-check'] = undefined; render();
+          await m.action(text);
+        }
+        break;
+
+      case 'review': {
+        var x = c.d.contributions.filter(function (q) { return String(q.id) === id; })[0], ok = t.getAttribute('data-ok') === '1';
+        if (!x) return;
+        openModal({
+          title: ok ? 'Подтвердить этот платёж?' : 'Отклонить этот платёж?', cls: ok ? 'good' : 'bad', confirm: ok ? 'Подтвердить' : 'Отклонить',
+          body: '<p><b>' + esc(name(c, x.member_id)) + '</b> говорит, что отправил(а) <b>' + money(x.amount) + '</b> — ' + CW.prettyDate(x.transfer_date, true) + '.</p>' +
+            (ok ? '<p class="muted" style="margin-top:6px">Сумма будет добавлена к подтверждённому балансу.</p>' : '<p class="muted" style="margin-top:6px">Сумма не будет засчитана.</p>'),
+          check: ok ? 'Я открыл(а) Simbank и увидел(а), что именно эта сумма поступила на карту.' : 'Я посмотрел(а) в Simbank и не нашёл(ла) этот платёж.',
+          input: { label: 'Заметка (необязательно)', placeholder: ok ? '' : 'Например: пришло только 500' },
+          action: function (note) { return run(function () { return API.rpc('review_contribution', { p_id: x.id, p_approve: ok, p_note: note }); }, ok ? 'Платёж подтверждён.' : 'Платёж отклонён.'); }
+        });
+        break;
+      }
+      case 'vote': {
+        var e1 = c.d.expenses.filter(function (q) { return String(q.id) === id; })[0], okv = t.getAttribute('data-ok') === '1';
+        if (!e1) return;
+        openModal({
+          title: okv ? 'Одобрить этот запрос?' : 'Отклонить этот запрос?', cls: okv ? 'good' : 'bad', confirm: okv ? 'Одобрить' : 'Отклонить',
+          body: '<p><b>' + esc(name(c, e1.requested_by)) + '</b> хочет потратить <b>' + money(e1.amount) + '</b> на: ' + esc(e1.description) + '</p><p class="muted" style="margin-top:6px">Позже голос изменить нельзя.</p>',
+          action: function () { return run(function () { return API.rpc('vote_expense', { p_id: e1.id, p_approve: okv }); }, 'Ваш голос сохранён.'); }
+        });
+        break;
+      }
+      case 'paid': {
+        var e2 = c.d.expenses.filter(function (q) { return String(q.id) === id; })[0];
+        if (!e2) return;
+        openModal({
+          title: 'Отметить оплаченным?', confirm: 'Отметить', cls: 'good',
+          body: '<p><b>' + money(e2.amount) + '</b> — ' + esc(e2.description) + '</p><p class="muted" style="margin-top:6px">Баланс уменьшится на эту сумму.</p>',
+          check: 'Я открыл(а) Simbank и увидел(а), что этот платёж списан с карты.',
+          input: { label: 'Заметка (необязательно)', placeholder: '' },
+          action: function (note) { return run(function () { return API.rpc('mark_expense_paid', { p_id: e2.id, p_note: note }); }, 'Отмечено оплаченным. Баланс обновлён.'); }
+        });
+        break;
+      }
+      case 'cancelexp': {
+        var e3 = c.d.expenses.filter(function (q) { return String(q.id) === id; })[0];
+        if (!e3) return;
+        openModal({
+          title: 'Отменить этот запрос?', confirm: 'Отменить запрос', cls: 'bad',
+          body: '<p>' + money(e3.amount) + ' — ' + esc(e3.description) + '</p>',
+          action: function () { return run(function () { return API.rpc('cancel_expense', { p_id: e3.id }); }, 'Запрос отменён.'); }
+        });
+        break;
+      }
+
+      case 'csv-tx': {
+        var tx = CW.buildTransactions(c.d.settings, c.d.contributions, c.d.expenses, c.byId);
+        download('obshchiy-koshelek-dengi-' + c.today + '.csv', '﻿' + CW.toCSV(
+          ['Дата', 'Тип', 'Описание', 'Кто', 'Проверил(а)', 'Сумма (сом)', 'Баланс после (сом)'],
+          tx.map(function (r) { return [r.date, KIND_RU[r.kind] || r.kind, r.label, r.who, r.checkedBy || '', r.sign * r.amount, r.balanceAfter]; })), 'text/csv');
+        break;
+      }
+      case 'csv-report': {
+        var ym = t.getAttribute('data-month');
+        var r = CW.monthlyReport(ym, c.d.settings, c.d.contributions, c.d.expenses, c.profiles, c.today);
+        var rows = [['Баланс на начало', '', '', '', r.startBalance]]
+          .concat(r.transactions.map(function (q) { return [q.date, q.label, q.who, q.checkedBy || '', q.sign * q.amount]; }))
+          .concat([['Баланс на конец', '', '', '', r.endBalance]]);
+        download('obshchiy-koshelek-otchet-' + ym + '.csv', '﻿' + CW.toCSV(['Дата', 'Описание', 'Кто', 'Проверил(а)', 'Сумма (сом)'], rows), 'text/csv');
+        break;
+      }
+      case 'backup':
+        download('obshchiy-koshelek-kopiya-' + c.today + '.json', JSON.stringify({ saved_at: new Date().toISOString(), data: S.data }, null, 2));
+        break;
+    }
+  });
+
+  // ---------------------------------------------------------------- start
+  var splash = document.getElementById('splash');
+  var skip = /[?&]nosplash/.test(location.search);
+  var started = Date.now();
+  if (skip) splash.classList.add('gone');
+  boot().then(function () {
+    render();
+    var wait = skip ? 0 : Math.max(0, 2400 - (Date.now() - started));
+    setTimeout(function () { splash.classList.add('gone'); }, wait);
+  });
+})();
+
+</script>
