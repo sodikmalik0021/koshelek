@@ -380,7 +380,7 @@ body.typing .composer { position: static; }
 nav.bottom button { font-size: 11.5px; }
 
 
-/* ================= заставка С7 ================= */
+/* ================= заставка S7 ================= */
 #splash { background: radial-gradient(120% 90% at 50% 40%, #4a21b8 0%, #2a1470 48%, #130a3a 100%); gap: 0; overflow: hidden; }
 #splash .sp-glow { position: absolute; width: 520px; height: 520px; border-radius: 50%; left: 50%; top: 50%; margin: -260px 0 0 -260px;
   background: radial-gradient(circle, rgba(255,90,165,.34) 0%, rgba(124,58,237,.22) 35%, transparent 68%); opacity: 0; animation: spGlow 2.4s ease-out .1s forwards; }
@@ -487,10 +487,37 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .fl-name { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @keyframes flA { 0%,100% { transform: scale(1, 1) rotate(-2deg); } 35% { transform: scale(1.06, 1.12) rotate(2.5deg); } 70% { transform: scale(.97, 1.04) rotate(-1deg); } }
 @keyframes flB { 0%,100% { transform: scale(1, 1.03) skewX(-3deg); } 25% { transform: scale(1.08, .98) skewX(3deg); } 55% { transform: scale(.96, 1.1) skewX(-2deg); } 80% { transform: scale(1.03, 1.02) skewX(2deg); } }
+/* ---- карта S7: фиолетово-розовая + стекло и сияние ---- */
+.simcard { min-height: 214px; padding: 22px 24px 20px; border-radius: 22px;
+  background: radial-gradient(120% 90% at 0% 0%, #8b5cf6 0%, transparent 55%), radial-gradient(90% 90% at 100% 100%, #f43f8e 0%, transparent 60%), linear-gradient(135deg, #5b21b6, #c026d3 55%, #ec4899);
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 22px 44px -14px rgba(124,58,237,.6), 0 6px 14px rgba(40,10,90,.3); }
+.simcard::before { display: none; }
+.simcard::after { z-index: 4; border-radius: 22px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.24); }
+.simcard > i, .simcard > b { position: absolute; display: block; pointer-events: none; }
+.simcard .o1 { width: 230px; height: 230px; border-radius: 50%; left: -70px; bottom: -120px; background: #7c3aed; filter: blur(50px); opacity: .85; }
+.simcard .o2 { width: 200px; height: 200px; border-radius: 50%; right: -60px; top: -80px; background: #ff4fa3; filter: blur(50px); opacity: .7; }
+.simcard .o3 { width: 150px; height: 150px; border-radius: 50%; right: 30px; bottom: -80px; background: #22d3ee; filter: blur(46px); opacity: .5; }
+.simcard .glass { inset: 9px; border-radius: 15px; background: linear-gradient(135deg, rgba(255,255,255,.16), rgba(255,255,255,.03)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); z-index: 0; }
+.simcard .big { right: -12px; top: -30px; font: italic 900 170px/1 system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; letter-spacing: -.06em; color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,.34); background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,0)); -webkit-background-clip: text; background-clip: text; z-index: 0; }
+.simcard .sheen { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.26) 42%, rgba(255,255,255,.05) 50%, transparent 60%); }
+.simcard .top { font-weight: 500; letter-spacing: .02em; }
+.simcard .logo { font: italic 900 30px/1 system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; letter-spacing: -.05em; color: #fff; text-shadow: 0 2px 10px rgba(40,10,90,.4); }
+.simcard .chiprow { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+.simcard .chip { width: 46px; height: 35px; margin: 0; border-radius: 7px; position: relative;
+  background: linear-gradient(135deg, #f7e2a1, #d4a84a 45%, #f2d98b 70%, #b98a2e); box-shadow: inset 0 0 0 1px rgba(138,98,26,.55), 0 1px 2px rgba(0,0,0,.3); }
+.simcard .chip::before { content: ""; position: absolute; inset: 0; border-radius: 7px; background:
+  linear-gradient(rgba(138,98,26,.4), rgba(138,98,26,.4)) 50% 0 / 1px 100% no-repeat, linear-gradient(rgba(138,98,26,.4), rgba(138,98,26,.4)) 0 30% / 100% 1px no-repeat,
+  linear-gradient(rgba(138,98,26,.4), rgba(138,98,26,.4)) 0 50% / 100% 1px no-repeat, linear-gradient(rgba(138,98,26,.4), rgba(138,98,26,.4)) 0 70% / 100% 1px no-repeat; }
+.simcard .nfc { width: 26px; height: 26px; opacity: .9; }
+.simcard .lbl { margin-top: 14px; opacity: .85; }
+.simcard .bal { font: 700 36px/1.1 system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; letter-spacing: -.02em; text-shadow: 0 2px 8px rgba(40,10,90,.3); }
+.simcard .bottom { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: #fff; opacity: .92; align-items: center; }
+.simcard .bottom b { font-weight: 700; letter-spacing: .08em; }
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
-  <svg class="sp-logo" viewBox="0 0 200 200" aria-label="С7">
+  <svg class="sp-logo" viewBox="0 0 200 200" aria-label="S7">
     <defs>
       <linearGradient id="spg" gradientUnits="userSpaceOnUse" x1="50" y1="50" x2="165" y2="150"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#ffd3ea"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient>
       <linearGradient id="spr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7cf0ff"/><stop offset=".5" stop-color="#b46bff"/><stop offset="1" stop-color="#ff5aa5"/></linearGradient>
@@ -499,7 +526,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
     <circle class="sp-ring" cx="100" cy="100" r="88" pathLength="1" fill="none" stroke="url(#spr)" stroke-width="3.5" stroke-linecap="round" transform="rotate(-90 100 100)"/>
     <circle class="sp-ring2" cx="100" cy="100" r="76" pathLength="1" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="1.2" transform="rotate(90 100 100)"/>
     <g filter="url(#spf)" fill="none" stroke="url(#spg)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
-      <path class="sp-c" pathLength="1" d="M96 74 A33 33 0 1 0 96 126"/>
+      <path class="sp-c" pathLength="1" d="M101 83 C96 68 64 66 64 88 C64 110 102 98 102 119 C102 138 68 136 61 120"/>
       <path class="sp-7a" pathLength="1" d="M112 72 H160"/>
       <path class="sp-7b" pathLength="1" d="M160 72 L131 132"/>
     </g>
@@ -1317,9 +1344,10 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
   function viewHome(c) {
     var s = c.d.settings, h = '';
     var names = c.profiles.map(function (p) { return esc(p.full_name.split(' ')[0]); }).join(' · ');
-    h += '<div class="simcard"><div class="top"><span>Общий кошелёк</span><span>Карта Simbank</span></div>' +
-      '<div><div class="chip"></div><div class="lbl">Подтверждённый баланс</div><div class="bal num">' + money(c.bal.confirmed) + '</div></div>' +
-      '<div class="bottom"><span>Общая карта: ' + names + '</span></div></div>';
+    h += '<div class="simcard"><i class="o1"></i><i class="o2"></i><i class="o3"></i><i class="glass"></i><b class="big">S7</b><i class="sheen"></i>' +
+      '<div class="top"><span>Общий кошелёк</span><span class="logo">S7</span></div>' +
+      '<div><div class="chiprow"><div class="chip"></div><svg class="nfc" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 8c2.5 2.5 2.5 5.5 0 8"/><path d="M10 5c4.5 4.5 4.5 9.5 0 14"/><path d="M14 2c6.5 6.5 6.5 13.5 0 20"/></svg></div><div class="lbl">Подтверждённый баланс</div><div class="bal num">' + money(c.bal.confirmed) + '</div></div>' +
+      '<div class="bottom"><span>' + names.replace(/ · /g, ' · ') + '</span><b>SIMBANK</b></div></div>';
     h += '<div class="card-notes">';
     if (c.bal.pendingIn > 0) h += '<span class="note-chip">Ждут проверки: <b>' + money(c.bal.pendingIn) + '</b></span>';
     if (c.bal.approvedNotPaid > 0) h += '<span class="note-chip">Одобрено, ещё не оплачено: <b>' + money(c.bal.approvedNotPaid) + '</b></span>';
