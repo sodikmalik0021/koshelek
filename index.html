@@ -323,6 +323,18 @@ nav.bottom .badge { background: var(--pink); }
 .cd-cell small { font-size: 12px; opacity: .85; margin-top: 5px; }
 .cd-foot { font-size: 14px; background: rgba(255,255,255,.15); border-radius: 12px; padding: 8px 11px; }
 
+.cdl { display: block; width: 100%; border: 0; text-align: left; cursor: pointer; border-radius: 16px; padding: 11px 14px 12px; background: #fff; box-shadow: 0 4px 14px rgba(40,40,90,.10); margin: 6px 0 10px; font: inherit; color: inherit; }
+.cdl-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 700; }
+.cdl-foot { font-size: 12.5px; font-weight: 500; opacity: .8; text-align: right; }
+.cdl-bar { display: block; height: 8px; border-radius: 99px; background: #e8e8f2; margin-top: 9px; overflow: hidden; }
+.cdl-bar i { display: block; height: 100%; border-radius: 99px; background: #12b76a; transition: width .6s linear, background .3s; }
+.cdl.warn .cdl-bar i { background: #f5b400; }
+.cdl.soon .cdl-bar i { background: #ff7a1a; }
+.cdl.late .cdl-bar i { background: #e0245e; }
+.cdl.paid .cdl-bar i { background: #12b76a; }
+.wk-act { margin-top: 6px; }
+.btn.small { padding: 6px 12px; font-size: 13px; border-radius: 10px; }
+
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 #app.enter > *:not(.topbar) { animation: rise .42s cubic-bezier(.2,.75,.25,1) both; }
 #app.enter > *:nth-child(3) { animation-delay: .04s; } #app.enter > *:nth-child(4) { animation-delay: .08s; }
@@ -473,7 +485,11 @@ nav.bottom button { font-size: 11.5px; }
   function memberSummary(memberId, settings, contributions, todayStr) {
     var weekly = settings.weekly_amount;
     var deadlines = deadlinesUpTo(settings.start_date, todayStr);
-    var weeks = deadlines.map(function (d) { return { deadline: d, paid: 0, completedOn: null }; });
+    var marked = {};
+    (settings.week_marks || []).forEach(function (k) { if (k.member_id === memberId) marked[k.deadline] = true; });
+    var weeks = deadlines.map(function (d) {
+      return marked[d] ? { deadline: d, paid: weekly, completedOn: d, marked: true } : { deadline: d, paid: 0, completedOn: null };
+    });
 
     var mine = contributions.filter(function (c) {
       return c.member_id === memberId && c.status === 'approved' && c.transfer_date <= todayStr;
@@ -488,6 +504,7 @@ nav.bottom button { font-size: 11.5px; }
       totalApproved += c.amount;
       while (left > 0 && wi < weeks.length) {
         var w = weeks[wi];
+        if (w.marked) { wi++; continue; }
         var take = Math.min(weekly - w.paid, left);
         w.paid += take;
         left -= take;
@@ -1035,28 +1052,24 @@ nav.bottom button { font-size: 11.5px; }
   function countdownCard(m) {
     if (!m) return '';
     var target = deadlineEndMs(m.nextDeadline), paid = m.current.remaining === 0, left = target - Date.now();
-    var state = m.debt > 0 ? 'late' : paid ? 'paid' : left < 86400000 ? 'soon' : 'calm';
-    var foot = m.debt > 0 ? 'Просрочено: <b>' + money(m.debt) + '</b>. Внесите как можно скорее.'
-      : paid ? 'Эта неделя у вас оплачена. Спасибо! ✓'
-      : 'За эту неделю осталось внести: <b>' + money(m.current.remaining) + '</b>';
-    return '<button class="countdown ' + state + '" id="cd" data-act="tab" data-tab="payments" data-target="' + target + '">' +
-      '<span class="cd-head"><span>' + (paid && !m.debt ? 'До конца недели' : 'До срока оплаты') + '</span><span class="cd-date">' + CW.prettyDate(m.nextDeadline, true).replace(/ \d{4}$/, '') + ', 23:59</span></span>' +
-      '<span class="cd-digits">' + ['d', 'h', 'm', 's'].map(function (u) {
-        return '<span class="cd-cell"><b id="cd-' + u + '">00</b><small id="cd-' + u + 'l"></small></span>';
-      }).join('<i>:</i>') + '</span>' +
-      '<span class="cd-foot">' + foot + '</span></button>';
+    var state = m.debt > 0 ? 'late' : paid ? 'paid' : left < 86400000 ? 'soon' : left < 3 * 86400000 ? 'warn' : 'calm';
+    var foot = m.debt > 0 ? 'Просрочено: <b>' + money(m.debt) + '</b>'
+      : paid ? 'Эта неделя оплачена ✓'
+      : 'К оплате за неделю: <b>' + money(m.current.remaining) + '</b>';
+    return '<button class="cdl ' + state + '" id="cd" data-act="tab" data-tab="payments" data-target="' + target + '">' +
+      '<span class="cdl-top"><span id="cd-text">…</span><span class="cdl-foot">' + foot + '</span></span>' +
+      '<span class="cdl-bar"><i id="cd-bar"></i></span></button>';
   }
   function tickCountdown() {
     var el = document.getElementById('cd');
     if (!el) return;
     var left = Math.max(0, Number(el.getAttribute('data-target')) - Date.now());
-    var t = Math.floor(left / 1000), v = { d: Math.floor(t / 86400), h: Math.floor(t % 86400 / 3600), m: Math.floor(t % 3600 / 60), s: t % 60 };
-    var words = { d: ['день', 'дня', 'дней'], h: ['час', 'часа', 'часов'], m: ['минута', 'минуты', 'минут'], s: ['секунда', 'секунды', 'секунд'] };
-    Object.keys(v).forEach(function (u) {
-      var b = document.getElementById('cd-' + u), l = document.getElementById('cd-' + u + 'l');
-      if (b) b.textContent = String(v[u]).padStart(2, '0');
-      if (l) l.textContent = CW.plural(v[u], words[u][0], words[u][1], words[u][2]);
-    });
+    var t = Math.floor(left / 1000), d = Math.floor(t / 86400), h = Math.floor(t % 86400 / 3600), mi = Math.floor(t % 3600 / 60), sec = t % 60;
+    var txt = d > 0 ? 'До субботы: ' + d + ' ' + CW.plural(d, 'день', 'дня', 'дней') + ' ' + h + ' ч'
+      : 'До конца срока: ' + String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    var tx = document.getElementById('cd-text'), bar = document.getElementById('cd-bar');
+    if (tx) tx.textContent = el.classList.contains('late') ? 'Срок прошёл' : txt;
+    if (bar) bar.style.width = (el.classList.contains('late') ? 100 : Math.max(2, Math.min(100, left / (7 * 86400000) * 100))) + '%';
     if (left === 0) { if (!S.cdRolled) { S.cdRolled = true; setTimeout(render, 1500); } }
     else S.cdRolled = false;
   }
@@ -1215,10 +1228,11 @@ nav.bottom button { font-size: 11.5px; }
     if (!s.setup_done) return '<div class="msg warn" style="margin-top:14px">Настройка ещё не завершена.</div>';
 
     h += '<h2>Я отправил(а) деньги</h2><div class="panel"><form data-form="payment">' +
-      '<p class="muted">Сначала переведите деньги на общую карту Simbank. Затем укажите здесь точную сумму. Баланс обновится сразу.</p>' +
+      '<p class="muted">Переведите деньги на карту Simbank и впишите сумму. Баланс обновится сразу, дата ставится сама.</p>' +
       '<label for="p-amount">Сколько вы отправили (сом)</label><input id="p-amount" type="number" inputmode="numeric" min="1" step="1" placeholder="1000" value="' + esc(draft('p-amount', '')) + '" required>' +
-      '<label for="p-date">Дата перевода</label><input id="p-date" type="date" max="' + c.today + '" value="' + esc(draft('p-date', c.today)) + '" required>' +
-      '<label for="p-note">Заметка (необязательно)</label><input id="p-note" type="text" maxlength="120" placeholder="Например: за 2 недели" value="' + esc(draft('p-note', '')) + '">' +
+      '<input id="p-date" type="hidden" value="' + c.today + '">' +
+      '<details style="margin-top:8px"' + (draft('p-note', '') ? ' open' : '') + '><summary class="muted small" style="cursor:pointer">Добавить заметку</summary>' +
+      '<input id="p-note" type="text" maxlength="120" placeholder="Например: за 2 недели" value="' + esc(draft('p-note', '')) + '"></details>' +
       '<button class="btn full" type="submit">Внести в кошелёк</button></form></div>';
 
     if (c.toReview.length) {
@@ -1231,18 +1245,24 @@ nav.bottom button { font-size: 11.5px; }
     }
 
     var pid = c.byId[S.payMember] ? S.payMember : c.me.id, sm = c.summaries[pid];
+    var isAdminMe = c.me.role === 'main_admin' || c.me.role === 'assistant_admin';
     h += '<h2>Еженедельные взносы</h2><div class="seg" role="tablist">' + c.profiles.map(function (p) {
       return '<button data-act="paymember" data-id="' + p.id + '" class="' + (p.id === pid ? 'on' : '') + '">' + esc(p.full_name.split(' ')[0]) + '</button>';
     }).join('') + '</div>';
     h += '<div class="panel"><dl class="kv"><dt>Всего внесено</dt><dd class="num">' + money(sm.totalApproved) + '</dd>' +
       '<dt>Пропущено недель</dt><dd>' + sm.missedWeeks + '</dd>' +
       '<dt class="total">Долг (просрочено)</dt><dd class="num total ' + (sm.debt ? 'bad-text' : 'good-text') + '">' + money(sm.debt) + '</dd>' +
-      (sm.creditAhead ? '<dt>Оплачено вперёд</dt><dd class="num">' + money(sm.creditAhead) + '</dd>' : '') + '</dl></div>';
+      (sm.creditAhead ? '<dt>Оплачено вперёд</dt><dd class="num">' + money(sm.creditAhead) + '</dd>' : '') + '</dl>' +
+      (isAdminMe && pid !== c.me.id ? '<div class="btns">' + btn('Записать платёж за ' + esc(c.byId[pid].full_name.split(' ')[0]), 'addfor', 'data-id="' + pid + '"', 'full') + '</div>' : '') + '</div>';
     h += '<div class="panel tight list">' + sm.weeks.slice().reverse().map(function (w) {
       var detail = w.status === 'paid_late' ? 'Закрыто ' + CW.prettyDate(w.completedOn) :
         w.paid > 0 && w.status !== 'paid' ? money(w.paid) + ' из ' + money(w.due) + ' оплачено' :
           w.status === 'overdue' ? 'долг ' + money(w.remaining) : w.status === 'due' ? 'к оплате ' + money(w.remaining) : '';
-      return '<div class="item row"><div><b>' + CW.prettyDate(w.deadline, true) + '</b><div class="muted small">' + esc(detail) + '</div></div>' + chip(w.status, WEEK_TEXT[w.status]) + '</div>';
+      if (w.marked) detail = 'Отмечено администратором';
+      var act = '';
+      if (isAdminMe && (w.marked || w.status !== 'paid' && w.status !== 'paid_late'))
+        act = '<div class="wk-act">' + btn(w.marked ? 'Снять отметку' : 'Отметить оплаченной', 'weekmark', 'data-id="' + pid + '" data-d="' + w.deadline + '" data-on="' + (w.marked ? '0' : '1') + '"', 'ghost small') + '</div>';
+      return '<div class="item row"><div><b>' + CW.prettyDate(w.deadline, true) + '</b><div class="muted small">' + esc(detail) + '</div>' + act + '</div>' + chip(w.status, WEEK_TEXT[w.status]) + '</div>';
     }).join('') + '</div>';
 
     var all = c.d.contributions.slice().sort(function (a, b) { return b.id - a.id; });
@@ -1474,7 +1494,7 @@ nav.bottom button { font-size: 11.5px; }
     S.lastJson = j;
     S.uid = d.me.id;
     if (d.me.status !== 'active') { S.phase = 'pending'; S.pendingMe = d.me; S.data = null; }
-    else { S.phase = 'app'; S.pendingMe = null; S.data = d; }
+    else { S.phase = 'app'; S.pendingMe = null; d.settings.week_marks = d.week_marks || []; S.data = d; }
     return changed;
   }
   async function reload(silent) {
@@ -1732,6 +1752,28 @@ nav.bottom button { font-size: 11.5px; }
         }
         break;
 
+      case 'weekmark': {
+        var wm = t.getAttribute('data-d'), won = t.getAttribute('data-on') === '1';
+        openModal({
+          title: won ? 'Отметить неделю оплаченной?' : 'Снять отметку?', cls: won ? 'good' : 'bad', confirm: won ? 'Отметить' : 'Снять',
+          body: '<p><b>' + esc(name(c, id)) + '</b> — неделя до ' + CW.prettyDate(wm, true) + '.</p><p class="muted" style="margin-top:6px">' + (won ? 'Баланс кошелька не изменится: это только отметка, что человек уже внёс за эту неделю.' : 'Неделя снова станет неоплаченной.') + '</p>',
+          action: function () { return run(function () { return API.rpc('set_week_paid', { p_member: id, p_deadline: wm, p_paid: won }); }, won ? 'Неделя отмечена оплаченной.' : 'Отметка снята.'); }
+        });
+        break;
+      }
+      case 'addfor': {
+        openModal({
+          title: 'Записать платёж за ' + name(c, id), confirm: 'Записать', cls: 'good',
+          body: '<p class="muted">Сумма добавится к балансу кошелька, дата — сегодня.</p>',
+          input: { label: 'Сумма (сом)', placeholder: '1000' },
+          action: function (txt) {
+            var am = parseInt(String(txt).replace(/\s/g, ''), 10);
+            if (!(am > 0)) { toast('Введите сумму.', true); return; }
+            return run(function () { return API.rpc('add_contribution_for', { p_member: id, p_amount: am, p_transfer_date: c.today, p_note: null }); }, 'Платёж записан. Баланс обновлён.');
+          }
+        });
+        break;
+      }
       case 'review': {
         var x = c.d.contributions.filter(function (q) { return String(q.id) === id; })[0], ok = t.getAttribute('data-ok') === '1';
         if (!x) return;
