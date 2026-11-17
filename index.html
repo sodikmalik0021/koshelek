@@ -514,6 +514,49 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .simcard .bal { font: 700 36px/1.1 system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; letter-spacing: -.02em; text-shadow: 0 2px 8px rgba(40,10,90,.3); }
 .simcard .bottom { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: #fff; opacity: .92; align-items: center; }
 .simcard .bottom b { font-weight: 700; letter-spacing: .08em; }
+/* ---- копилка, график, достижения, лента, реакции, упоминания ---- */
+.goal-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.goal-title { font-size: 18px; font-weight: 800; }
+.goal-bar { height: 16px; border-radius: 999px; background: rgba(124,58,237,.14); overflow: hidden; margin-top: 12px; position: relative; }
+.goal-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7c3aed, #ec4899, #f59e0b); transition: width .9s cubic-bezier(.2,.8,.2,1); position: relative; }
+.goal-bar i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.5) 50%, transparent 70%); background-size: 200% 100%; animation: goalShine 2.6s linear infinite; }
+@keyframes goalShine { from { background-position: 200% 0; } to { background-position: -100% 0; } }
+.goal-marks { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+.goal-done { text-align: center; font-weight: 800; font-size: 17px; padding: 6px 0 2px; }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.presets button { border: 1.5px solid rgba(124,58,237,.35); background: transparent; color: var(--violet); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.presets button:active { background: rgba(124,58,237,.12); }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--ink-soft); font-size: 9.5px; }
+.chart .gl { stroke: var(--violet); stroke-opacity: .35; stroke-dasharray: 3 3; }
+.ach { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
+.ach > div { text-align: center; font-size: 11.5px; line-height: 1.2; color: var(--ink); }
+.ach .em { font-size: 28px; width: 52px; height: 52px; margin: 0 auto 4px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: linear-gradient(135deg, rgba(124,58,237,.16), rgba(236,72,153,.18)); }
+.ach .off { opacity: .42; filter: grayscale(1); }
+.feed .item { display: flex; gap: 10px; align-items: flex-start; }
+.feed .ic { width: 30px; height: 30px; flex: none; border-radius: 10px; background: rgba(124,58,237,.12); display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 99; overflow: hidden; }
+.confetti span { position: absolute; top: -16px; width: 9px; height: 14px; border-radius: 2px; animation: cfFall linear forwards; }
+@keyframes cfFall { to { transform: translate3d(var(--dx), 105vh, 0) rotate(var(--rot)); opacity: .9; } }
+.mchips { flex: 0 0 100%; order: -1; display: flex; gap: 6px; overflow-x: auto; padding: 2px 12px 6px 0; margin-left: -6px; }
+.mchips button { flex: none; border: 0; border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 13px; font-weight: 600; color: var(--violet); background: rgba(124,58,237,.12); cursor: pointer; }
+.composer { flex-wrap: wrap; border-radius: 26px; }
+.mention { font-weight: 800; color: #7c3aed; background: rgba(124,58,237,.14); border-radius: 6px; padding: 0 3px; }
+.brow.me .mention { color: #fff; background: rgba(255,255,255,.24); }
+.mention.me { color: #fff; background: #7c3aed; }
+.bubble.tome { box-shadow: 0 0 0 2px #ec4899; }
+.bcol.meb { align-items: flex-end; }
+.rx { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; align-items: center; }
+.rx button { border: 1px solid rgba(124,58,237,.28); background: rgba(124,58,237,.07); color: var(--ink); border-radius: 999px; padding: 1px 8px; font: inherit; font-size: 13px; cursor: pointer; line-height: 1.5; }
+.rx button.mine { background: rgba(124,58,237,.22); border-color: #7c3aed; font-weight: 700; }
+.rx .rxadd { color: var(--ink-soft); opacity: .65; padding: 1px 7px; }
+.rxpick { display: flex; gap: 2px; background: var(--paper, #fff); border-radius: 999px; padding: 3px 6px; box-shadow: 0 6px 18px rgba(60,20,140,.22); margin-top: 3px; }
+.rxpick button { border: 0; background: transparent; font-size: 21px; padding: 2px 5px; cursor: pointer; }
+nav.bottom .badge.at, .qb.at { background: #ef4444; animation: atPulse 1.6s ease-in-out infinite; }
+@keyframes atPulse { 50% { box-shadow: 0 0 0 5px rgba(239,68,68,.22); } }
+html[data-theme="dark"] .composer input, .composer input { background: transparent !important; box-shadow: none !important; }
+.mchips { scrollbar-width: none; }
+.mchips::-webkit-scrollbar { display: none; }
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
@@ -1181,7 +1224,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
       '<nav class="bottom" aria-label="Меню"><div class="inner">' + tabs.map(function (t) {
         return '<button data-act="tab" data-tab="' + t[0] + '" class="' + (S.tab === t[0] ? 'on' : '') + '"' + (S.tab === t[0] ? ' aria-current="page"' : '') + '>' +
           '<svg viewBox="0 0 24 24" aria-hidden="true">' + t[2] + '</svg>' + t[1] +
-          (t[3] === -1 ? '<span class="badge" id="nav-chat-badge"' + (unread ? '' : ' hidden') + '>' + unread + '</span>'
+          (t[3] === -1 ? '<span class="badge' + atCls() + '" id="nav-chat-badge"' + (unread ? '' : ' hidden') + '>' + badgeTxt() + '</span>'
             : t[3] ? '<span class="badge" aria-label="' + t[3] + ' ждут">' + t[3] + '</span>' : '') + '</button>';
       }).join('') + '</div></nav>' + viewModal();
   }
@@ -1222,7 +1265,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
     ];
     return '<div class="quick">' + items.map(function (q) {
       return '<button data-act="tab" data-tab="' + q[0] + '"><span class="qi"><svg viewBox="0 0 24 24" aria-hidden="true">' + q[2] + '</svg>' +
-        (q[0] === 'chat' ? '<span class="qb" id="qa-chat-badge"' + (unread ? '' : ' hidden') + '>' + unread + '</span>' : nb[q[0]] ? '<span class="qb">' + nb[q[0]] + '</span>' : '') + '</span>' + q[1] + '</button>';
+        (q[0] === 'chat' ? '<span class="qb' + atCls() + '" id="qa-chat-badge"' + (unread ? '' : ' hidden') + '>' + badgeTxt() + '</span>' : nb[q[0]] ? '<span class="qb">' + nb[q[0]] + '</span>' : '') + '</span>' + q[1] + '</button>';
     }).join('') + '</div>';
   }
   // Kyrgyzstan is UTC+6 all year: the deadline ends at 24:00 of Saturday there.
@@ -1261,6 +1304,33 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
   // ----- CHAT
   function chatReadGet() { try { return Number(localStorage.getItem('koshelek_chat_read_' + S.uid)) || 0; } catch (e) { return 0; } }
   function chatReadSet(id) { try { localStorage.setItem('koshelek_chat_read_' + S.uid, String(id)); } catch (e) { } }
+  function firstName(p) { return String(p.full_name || '').trim().split(/\s+/)[0]; }
+  function mentionsMe(body) {
+    if (!S.data || !body) return false;
+    var me = null; S.data.profiles.forEach(function (p) { if (p.id === S.uid) me = p; });
+    if (!me) return false;
+    var f = firstName(me).toLowerCase(), low = String(body).toLowerCase(), i = low.indexOf('@' + f);
+    while (i >= 0) {
+      var nx = low.charAt(i + 1 + f.length);
+      if (!nx || !/[\p{L}\p{N}_]/u.test(nx)) return true;
+      i = low.indexOf('@' + f, i + 1);
+    }
+    return false;
+  }
+  function chatMentions() {
+    var read = chatReadGet();
+    return S.chat.messages.filter(function (m) { return m.id > read && !m.deleted && m.member_id !== S.uid && mentionsMe(m.body); }).length;
+  }
+  function badgeTxt() { var n = chatUnread(), a = chatMentions(); return (a ? '@' : '') + n; }
+  function atCls() { return chatMentions() ? ' at' : ''; }
+  function mentionHtml(body) {
+    var names = {}, myName = '';
+    S.data.profiles.forEach(function (p) { names[firstName(p).toLowerCase()] = 1; if (p.id === S.uid) myName = firstName(p).toLowerCase(); });
+    return esc(body).replace(/(^|[^\p{L}\p{N}_])@([\p{L}\p{N}_]+)/gu, function (all, pre, nm) {
+      var k = nm.toLowerCase();
+      return names[k] ? pre + '<span class="mention' + (k === myName ? ' me' : '') + '">@' + nm + '</span>' : all;
+    });
+  }
   function chatUnread() {
     var read = chatReadGet();
     return S.chat.messages.filter(function (m) { return m.id > read && !m.deleted && m.member_id !== S.uid; }).length;
@@ -1273,6 +1343,16 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
     if (day === CW.addDays(today, -1)) return 'Вчера';
     return CW.prettyDate(day, true).replace(' ' + today.slice(0, 4), '');
   }
+  var REACTS = ['👍', '❤️', '😂', '🔥', '🙏', '😮'];
+  function reactionsHtml(m) {
+    var list = m.reactions || [], g = {}, order = [];
+    list.forEach(function (r) { if (!g[r.e]) { g[r.e] = { n: 0, mine: false }; order.push(r.e); } g[r.e].n++; if (r.m === S.uid) g[r.e].mine = true; });
+    var h = '<div class="rx">' + order.map(function (e) {
+      return '<button class="' + (g[e].mine ? 'mine' : '') + '" data-act="react" data-id="' + m.id + '" data-e="' + e + '">' + e + ' ' + g[e].n + '</button>';
+    }).join('') + '<button class="rxadd" data-act="react-open" data-id="' + m.id + '" aria-label="Реакция">☺︎+</button></div>';
+    if (S.reactFor === m.id) h += '<div class="rxpick">' + REACTS.map(function (e) { return '<button data-act="react" data-id="' + m.id + '" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div>';
+    return h;
+  }
   function chatListHtml(c) {
     var list = S.chat.messages;
     if (!list.length) return '<div class="chat-empty">Здесь пока тихо.<br>Напишите первое сообщение друзьям 👋</div>';
@@ -1283,10 +1363,12 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
       var mine = m.member_id === c.me.id;
       var cont = prev && prev.member_id === m.member_id && (new Date(m.created_at) - new Date(prev.created_at)) < 5 * 60000;
       var canDel = !m.deleted && (mine || isMain);
-      var body = m.deleted ? '<span class="gone">Сообщение удалено</span>' : esc(m.body);
-      var bubble = '<' + (canDel ? 'button data-act="msg-menu" data-id="' + m.id + '"' : 'div') + ' class="bubble' + (m.deleted ? ' deleted' : '') + '">' +
+      var body = m.deleted ? '<span class="gone">Сообщение удалено</span>' : mentionHtml(m.body);
+      var tome = !m.deleted && !mine && mentionsMe(m.body);
+      var bubble = '<' + (canDel ? 'button data-act="msg-menu" data-id="' + m.id + '"' : 'div') + ' class="bubble' + (m.deleted ? ' deleted' : '') + (tome ? ' tome' : '') + '">' +
         body + '<span class="t">' + timeOnly(m.created_at) + '</span></' + (canDel ? 'button' : 'div') + '>';
-      if (mine) h += '<div class="brow me' + (cont ? ' cont' : '') + '">' + bubble + '</div>';
+      bubble += m.deleted ? '' : reactionsHtml(m);
+      if (mine) h += '<div class="brow me' + (cont ? ' cont' : '') + '"><div class="bcol meb">' + bubble + '</div></div>';
       else {
         var idx = 0; c.d.profiles.forEach(function (q, k) { if (q.id === m.member_id) idx = k % 4; });
         h += '<div class="brow' + (cont ? ' cont' : '') + '">' + (cont ? '<span class="ava-gap"></span>' : ava(c, m.member_id, 'sm')) +
@@ -1299,6 +1381,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
   function viewChat(c) {
     return '<h2>Общий чат</h2><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
       '<form data-form="chat" class="composer" autocomplete="off">' +
+      '<div class="mchips">' + c.profiles.filter(function (p) { return p.id !== c.me.id; }).map(function (p) { return '<button type="button" data-act="mention" data-n="' + esc(firstName(p)) + '">@' + esc(firstName(p)) + '</button>'; }).join('') + '</div>' +
       '<input id="chat-input" type="text" maxlength="1000" placeholder="Сообщение…" enterkeyhint="send" autocomplete="off" aria-label="Сообщение">' +
       '<button type="submit" class="send" aria-label="Отправить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg></button></form>';
   }
@@ -1312,7 +1395,8 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
     ['nav-chat-badge', 'qa-chat-badge'].forEach(function (id) {
       var b = document.getElementById(id);
       if (!b) return;
-      b.textContent = n; if (n) b.removeAttribute('hidden'); else b.setAttribute('hidden', '');
+      b.textContent = badgeTxt(); b.classList.toggle('at', !!chatMentions());
+      if (n) b.removeAttribute('hidden'); else b.setAttribute('hidden', '');
     });
   }
   function scrollChatEnd() { window.scrollTo(0, document.documentElement.scrollHeight); }
@@ -1390,7 +1474,10 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
       h += '</div>';
     }
 
+    h += goalHtml(c);
     h += flamesHtml(c);
+    h += achHtml(c);
+    h += chartHtml(c);
     h += '<h2>Все участники</h2><div class="panel tight list">' + c.profiles.map(function (p) {
       var x = c.summaries[p.id], line;
       if (x.debt > 0) line = '<span class="bad-text">Долг ' + money(x.debt) + '</span><div class="muted small">' + x.missedWeeks + ' ' + CW.plural(x.missedWeeks, 'пропущенная неделя', 'пропущенные недели', 'пропущенных недель') + '</div>';
@@ -1401,7 +1488,106 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
         '<div style="text-align:right" class="small">' + line + '</div></div>' +
         '<div class="bar thin"><i class="' + (wp >= 100 ? 'full' : '') + '" style="width:' + wp + '%"></i></div></div></div>';
     }).join('') + '</div>';
+    h += feedHtml(c);
     return h;
+  }
+
+  // ----- goal, chart, achievements, feed
+  function weeklyInflow(c) { return c.d.settings.weekly_amount * c.profiles.length; }
+  function confetti() {
+    var box = document.createElement('div'); box.className = 'confetti';
+    var cols = ['#7c3aed', '#ec4899', '#f59e0b', '#22d3ee', '#10b981', '#fff'];
+    for (var i = 0; i < 70; i++) {
+      var sp = document.createElement('span');
+      sp.style.left = Math.random() * 100 + '%'; sp.style.background = cols[i % cols.length];
+      sp.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); sp.style.setProperty('--rot', (Math.random() * 900 - 450) + 'deg');
+      sp.style.animationDuration = (2.2 + Math.random() * 1.8) + 's'; sp.style.animationDelay = (Math.random() * .6) + 's';
+      box.appendChild(sp);
+    }
+    document.body.appendChild(box); setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 4800);
+  }
+  function goalHtml(c) {
+    var g = c.d.goal, isAdmin = c.me.role === 'main_admin' || c.me.role === 'assistant_admin', h = '<h2>Копилка</h2><div class="panel">';
+    if (S.editGoal && isAdmin) {
+      h += '<form data-form="goal"><label for="g-title">На что копим</label><input id="g-title" type="text" maxlength="40" placeholder="Например: поездка" value="' + esc(draft('g-title', g ? g.title : '')) + '" required>' +
+        '<label for="g-target">Сколько нужно (сом)</label><input id="g-target" type="number" inputmode="numeric" min="1000" step="500" placeholder="50000" value="' + esc(draft('g-target', g ? String(g.target) : '')) + '" required>' +
+        '<div class="presets">' + [10000, 20000, 50000, 100000, 200000].map(function (v) { return '<button type="button" data-act="goalpreset" data-v="' + v + '">' + CW.formatKGS(v).replace(' сом', '') + '</button>'; }).join('') + '</div>' +
+        '<div class="btns" style="margin-top:12px"><button class="btn ghost" type="button" data-act="goal-cancel">Отмена</button><button class="btn" type="submit">Сохранить цель</button></div></form></div>';
+      return h;
+    }
+    if (!g) {
+      h += '<p class="muted">Цель пока не выбрана. Выберите, на что копите и сколько нужно, и здесь появится прогресс.</p>' +
+        (isAdmin ? btn('Выбрать цель', 'goal-edit', '', 'full') : '<p class="muted small" style="margin-top:6px">Цель выбирает администратор.</p>') + '</div>';
+      return h;
+    }
+    var bal = Math.max(0, c.bal.confirmed), pct = Math.min(100, Math.floor(bal / g.target * 100)), left = Math.max(0, g.target - c.bal.confirmed);
+    h += '<div class="goal-top" data-act="confetti"><span class="goal-title">🎯 ' + esc(g.title) + '</span><span class="num"><b>' + pct + '%</b></span></div>' +
+      '<div class="goal-bar"><i style="width:' + Math.max(pct, bal > 0 ? 3 : 0) + '%"></i></div>' +
+      '<div class="goal-marks"><span class="num">' + money(bal) + '</span><span class="num">' + money(g.target) + '</span></div>';
+    if (left <= 0) {
+      h += '<div class="goal-done">🎉 Цель достигнута!</div>';
+      var key = 'koshelek_goal_done_' + g.id, seen = false;
+      try { seen = !!localStorage.getItem(key); if (!seen) localStorage.setItem(key, '1'); } catch (e) { }
+      if (!seen) setTimeout(confetti, 450);
+    } else {
+      var inflow = weeklyInflow(c), weeks = Math.ceil(left / inflow), ms = c.summaries[c.me.id];
+      var first = ms && ms.nextDeadline ? ms.nextDeadline : c.today;
+      h += '<p style="margin-top:10px">Осталось <b class="num">' + money(left) + '</b></p>' +
+        '<p class="muted small" style="margin-top:4px">Если все платят по ' + money(c.d.settings.weekly_amount) + ' в неделю (' + money(inflow) + ' на всех), цель будет примерно через <b>' + weeks + ' ' + CW.plural(weeks, 'неделю', 'недели', 'недель') + '</b>, к ' + CW.prettyDate(CW.addDays(first, (weeks - 1) * 7), true) + '.</p>';
+    }
+    if (isAdmin) h += '<div class="btns" style="margin-top:12px">' + btn('Изменить', 'goal-edit', '', 'ghost sm') + btn('Убрать', 'goal-del', '', 'ghost sm') + '</div>';
+    return h + '</div>';
+  }
+  function chartHtml(c) {
+    var s = c.d.settings, tx = CW.buildTransactions(s, c.d.contributions, c.d.expenses, c.byId), pts = [], last = null;
+    tx.forEach(function (t) { if (last && last.d === t.date) last.b = t.balanceAfter; else { last = { d: t.date, b: t.balanceAfter }; pts.push(last); } });
+    if (!pts.length || pts[pts.length - 1].d < c.today) pts.push({ d: c.today, b: c.bal.confirmed });
+    var h = '<h2>Баланс</h2><div class="panel">';
+    if (pts.length < 2) return h + '<p class="muted">График появится, когда пройдёт пара дней и будут платежи.</p></div>';
+    var day = function (d) { return Date.parse(d + 'T00:00:00Z') / 864e5; };
+    var x0 = day(pts[0].d), x1 = day(pts[pts.length - 1].d), g = c.d.goal;
+    var maxB = Math.max.apply(null, pts.map(function (p) { return p.b; })), minB = Math.min(0, Math.min.apply(null, pts.map(function (p) { return p.b; })));
+    var top = Math.max(maxB, g ? g.target : 0, 1);
+    var W = 320, H = 130, L = 8, R = 8, T = 14, B = 22;
+    var X = function (d) { return L + (x1 === x0 ? 0 : (day(d) - x0) / (x1 - x0)) * (W - L - R); };
+    var Y = function (v) { return T + (1 - (v - minB) / (top - minB)) * (H - T - B); };
+    var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p.d).toFixed(1) + ' ' + Y(p.b).toFixed(1); }).join(' ');
+    var area = line + ' L' + X(pts[pts.length - 1].d).toFixed(1) + ' ' + (H - B) + ' L' + X(pts[0].d).toFixed(1) + ' ' + (H - B) + ' Z';
+    var ep = pts[pts.length - 1];
+    h += '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="График баланса"><defs><linearGradient id="cga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".38"/><stop offset="1" stop-color="#ec4899" stop-opacity="0"/></linearGradient>' +
+      '<linearGradient id="cgl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>' +
+      (g ? '<line class="gl" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(g.target).toFixed(1) + '" y2="' + Y(g.target).toFixed(1) + '"/><text x="' + L + '" y="' + (Y(g.target) - 3).toFixed(1) + '">цель ' + CW.formatKGS(g.target) + '</text>' : '') +
+      '<path d="' + area + '" fill="url(#cga)"/><path d="' + line + '" fill="none" stroke="url(#cgl)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + X(ep.d).toFixed(1) + '" cy="' + Y(ep.b).toFixed(1) + '" r="4" fill="#ec4899" stroke="#fff" stroke-width="1.5"/>' +
+      '<text x="' + L + '" y="' + (H - 6) + '">' + CW.prettyDate(pts[0].d, false) + '</text><text x="' + (W - R) + '" y="' + (H - 6) + '" text-anchor="end">' + CW.prettyDate(ep.d, false) + '</text></svg>' +
+      '<p class="muted small" style="margin-top:6px">Сейчас на карте <b class="num">' + money(c.bal.confirmed) + '</b></p></div>';
+    return h;
+  }
+  function achHtml(c) {
+    var x = c.summaries[c.me.id]; if (!x) return '';
+    var g = c.d.goal;
+    var list = [
+      ['💸', 'Первый взнос', x.totalApproved > 0],
+      ['🔥', '3 недели подряд', x.streak >= 3],
+      ['⚡', '5 недель подряд', x.streak >= 5],
+      ['👑', '10 недель подряд', x.streak >= 10],
+      ['🛡️', 'Без долгов', x.totalApproved > 0 && x.debt === 0],
+      ['🚀', 'Платит вперёд', x.creditAhead > 0],
+      ['💎', '10 000 внесено', x.totalApproved >= 10000],
+      ['🎯', 'Цель достигнута', !!g && c.bal.confirmed >= g.target]
+    ];
+    var got = list.filter(function (a) { return a[2]; }).length;
+    return '<h2>Достижения</h2><div class="panel"><div class="ach">' + list.map(function (a) {
+      return '<div><div class="em' + (a[2] ? '' : ' off') + '">' + a[0] + '</div>' + a[1] + '</div>';
+    }).join('') + '</div><p class="muted small" style="margin-top:10px">Открыто: ' + got + ' из ' + list.length + '</p></div>';
+  }
+  function feedHtml(c) {
+    var items = (c.d.log || []).slice(0, 6);
+    if (!items.length) return '';
+    var ic = function (a) { return /contrib/.test(a) ? '💸' : /expense/.test(a) ? '🧾' : /goal/.test(a) ? '🎯' : /week/.test(a) ? '✅' : /member|joined|role/.test(a) ? '👋' : '•'; };
+    return '<h2>Что нового</h2><div class="panel tight list feed">' + items.map(function (l) {
+      return '<div class="item"><span class="ic">' + ic(l.action || '') + '</span><div><div>' + esc(l.details) + '</div><div class="muted small">' + CW.prettyDateTime(l.created_at) + '</div></div></div>';
+    }).join('') + '</div>' + btn('Все действия', 'feedall', '', 'full ghost');
   }
   function firstDeadlineText(dateStr) {
     if (!dateStr) return '';
@@ -1776,7 +1962,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
     document.addEventListener('focusin', function (e) { if (touch && e.target && e.target.id === 'chat-input') document.body.classList.add('typing'); });
     document.addEventListener('focusout', function (e) { if (e.target && e.target.id === 'chat-input') document.body.classList.remove('typing'); });
     // tapping «send» must not close the keyboard
-    document.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('.composer .send')) e.preventDefault(); });
+    document.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('.composer .send, .mchips button')) e.preventDefault(); });
     await API.init();
     API.subscribe(function () { if (S.phase === 'app' || S.phase === 'pending') reloadSoon(); });
     if (!API.hasToken()) return toLogin();
@@ -1824,6 +2010,15 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
         toast(e2.message, true);
         if (e2.needLogin) { API.forget(); await toLogin(); }
       } finally { S.chat.sending = false; }
+      return;
+    }
+
+    if (form === 'goal') {
+      var gt = val('g-title').trim(), gv = parseInt(String(val('g-target')).replace(/\s/g, ''), 10);
+      if (!gt) { toast('Напишите, на что копите.', true); return; }
+      if (!(gv >= 1000)) { toast('Сумма цели: от 1 000 сом.', true); return; }
+      var okg = await run(function () { return API.rpc('set_goal', { p_title: gt, p_target: gv }); }, 'Цель сохранена.');
+      if (okg) { S.editGoal = false; clearDrafts(['g-title', 'g-target']); render(); }
       return;
     }
 
@@ -1916,6 +2111,33 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
         break;
       }
       case 'hist': S.hist = t.getAttribute('data-hist'); render(); break;
+      case 'feedall': S.hist = 'log'; S.tab = 'history'; S.enter = true; window.scrollTo(0, 0); render(); break;
+      case 'goal-edit': S.editGoal = true; render(); break;
+      case 'goal-cancel': S.editGoal = false; clearDrafts(['g-title', 'g-target']); render(); break;
+      case 'goalpreset': {
+        var gi = document.getElementById('g-target'); if (gi) { gi.value = t.getAttribute('data-v'); S.drafts['g-target'] = gi.value; }
+        break;
+      }
+      case 'goal-del':
+        openModal({ title: 'Убрать цель?', cls: 'bad', confirm: 'Убрать', body: '<p class="muted">Копилка исчезнет с главной. Деньги на карте не изменятся.</p>',
+          action: function () { return run(function () { return API.rpc('delete_goal', {}); }, 'Цель убрана.'); } });
+        break;
+      case 'confetti': if (c && c.d.goal && c.bal.confirmed >= c.d.goal.target) confetti(); break;
+      case 'mention': {
+        var ci = document.getElementById('chat-input'); if (!ci) break;
+        var nm = t.getAttribute('data-n'), cur = ci.value;
+        ci.value = cur + (cur && !/\s$/.test(cur) ? ' ' : '') + '@' + nm + ' ';
+        S.drafts['chat-input'] = ci.value; ci.focus();
+        break;
+      }
+      case 'react-open': S.reactFor = (S.reactFor === Number(id) ? null : Number(id)); updateChatList(); break;
+      case 'react': {
+        var rid = Number(id), re = t.getAttribute('data-e'); S.reactFor = null;
+        try { await API.rpc('react', { p_id: rid, p_emoji: re }); await loadChat(); }
+        catch (er) { toast(er.message, true); if (er.needLogin) { API.forget(); await toLogin(); } }
+        updateChatList();
+        break;
+      }
       case 'paymember': S.payMember = id; render(); break;
       case 'togglepay': S.showAllPayments = !S.showAllPayments; render(); break;
       case 'closemodal': closeModal(); break;
