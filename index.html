@@ -625,6 +625,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
 
   // The date (in Kyrgyzstan) of a moment in time
   function localDate(ts) {
+    if (!ts || isNaN(new Date(ts).getTime())) return '';
     var parts = new Intl.DateTimeFormat('en-US', {
       timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
     }).formatToParts(new Date(ts));
@@ -782,13 +783,13 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     contributions.filter(function (c) { return c.status === 'approved'; }).forEach(function (c) {
       rows.push({
         kind: 'contribution', date: c.transfer_date, ts: c.reviewed_at || '', amount: c.amount,
-        label: 'Взнос', who: nameOf(profilesById, c.member_id), sign: 1, id: c.id,
+        label: 'Взнос', who: nameOf(profilesById, c.member_id), memberId: c.member_id, sign: 1, id: c.id,
         checkedBy: nameOf(profilesById, c.reviewed_by), checkedAt: c.reviewed_at, note: c.note || ''
       });
     });
     expenses.filter(function (e) { return e.status === 'paid'; }).forEach(function (e) {
       rows.push({
-        kind: 'expense', date: localDate(e.paid_at), ts: e.paid_at || '', amount: e.amount,
+        kind: 'expense', date: e.paid_at ? localDate(e.paid_at) : (e.created_at ? localDate(e.created_at) : settings.start_date), ts: e.paid_at || '', amount: e.amount,
         label: e.description, who: nameOf(profilesById, e.requested_by), sign: -1, id: e.id,
         checkedBy: nameOf(profilesById, e.paid_by), checkedAt: e.paid_at
       });
@@ -831,7 +832,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
 
     var asOf = end < todayStr ? end : todayStr;
     var perMember = profiles.map(function (p) {
-      var paid = sum(inside.filter(function (t) { return t.kind === 'contribution' && t.who === p.full_name; }),
+      var paid = sum(inside.filter(function (t) { return t.kind === 'contribution' && t.memberId === p.id; }),
         function (t) { return t.amount; });
       var debt = 0, missed = 0;
       if (settings.setup_done && asOf >= start) {
@@ -846,7 +847,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
       moneyOut: moneyOut, endBalance: startBalance + moneyIn - moneyOut,
       transactions: inside, perMember: perMember,
       rejected: contributions.filter(function (c) {
-        return c.status === 'rejected' && localDate(c.reviewed_at) >= start && localDate(c.reviewed_at) <= end;
+        var rd = localDate(c.reviewed_at); return c.status === 'rejected' && rd && rd >= start && rd <= end;
       }).length,
       beforeStart: !!(openingRow && openingRow.date > end)
     };
@@ -1216,7 +1217,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     var body = { home: viewHome, payments: viewPayments, expenses: viewExpenses, chat: viewChat, history: viewHistory, more: viewMore }[S.tab](c);
     var unread = chatUnread();
     var back = (S.tab === 'history' || S.tab === 'expenses') ? '<button class="backlink" data-act="tab" data-tab="home">‹ Главная</button>' : '';
-    body = back + body;
+    body = back + (S.live ? '' : '<div class="msg warn" style="margin-top:12px">Нет связи с интернетом. Показаны последние данные — изменения пока не сохранятся.</div>') + body;
     return '<div id="app" class="' + (S.enter ? 'enter ' : '') + 'tab-' + S.tab + '">' +
       '<div class="topbar"><span class="brand">Общий кошелёк</span>' +
       '<span class="me-box"><span class="who"><span class="sync ' + (S.live ? '' : 'off') + '" title="' + (S.live ? 'На связи' : 'Нет связи, повторим позже') + '"></span><b>' + esc(c.me.full_name) + '</b><br><span class="role">' + ROLE_NAME[c.me.role] + '</span></span>' + ava(c, c.me.id, 'md') + '<button class="refresh" data-act="reload" aria-label="Обновить" title="Обновить"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></span></div>' +
@@ -1236,7 +1237,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     c.d.profiles.forEach(function (q) { if (q.id === id) p = q; });
     var letter = p ? p.full_name.trim().charAt(0).toUpperCase() : '?';
     var photo = p && typeof p.avatar === 'string' && p.avatar.indexOf('data:image/jpeg;base64,') === 0;
-    return '<span class="ava c' + avaIdx(c, id) + (size ? ' ' + size : '') + '" aria-hidden="true">' + (photo ? '<img alt="" src="' + p.avatar + '">' : esc(letter)) + '</span>';
+    return '<span class="ava c' + avaIdx(c, id) + (size ? ' ' + size : '') + '" aria-hidden="true">' + (photo ? '<img alt="" src="' + esc(p.avatar) + '">' : esc(letter)) + '</span>';
   }
   var FL = [['#7c3aed', '#d946ef', '#f3e0ff'], ['#ff3d8b', '#ff9a3d', '#fff0d6'], ['#0ea5e9', '#6366f1', '#e0f7ff'], ['#0a9b62', '#a3e635', '#eaffd6']];
   var flN = 0;
@@ -1348,7 +1349,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     var list = m.reactions || [], g = {}, order = [];
     list.forEach(function (r) { if (!g[r.e]) { g[r.e] = { n: 0, mine: false }; order.push(r.e); } g[r.e].n++; if (r.m === S.uid) g[r.e].mine = true; });
     var h = '<div class="rx">' + order.map(function (e) {
-      return '<button class="' + (g[e].mine ? 'mine' : '') + '" data-act="react" data-id="' + m.id + '" data-e="' + e + '">' + e + ' ' + g[e].n + '</button>';
+      return '<button class="' + (g[e].mine ? 'mine' : '') + '" data-act="react" data-id="' + esc(m.id) + '" data-e="' + esc(e) + '">' + esc(e) + ' ' + g[e].n + '</button>';
     }).join('') + '<button class="rxadd" data-act="react-open" data-id="' + m.id + '" aria-label="Реакция">☺︎+</button></div>';
     if (S.reactFor === m.id) h += '<div class="rxpick">' + REACTS.map(function (e) { return '<button data-act="react" data-id="' + m.id + '" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div>';
     return h;
@@ -1511,7 +1512,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     if (S.editGoal && isAdmin) {
       h += '<form data-form="goal"><label for="g-title">На что копим</label><input id="g-title" type="text" maxlength="40" placeholder="Например: поездка" value="' + esc(draft('g-title', g ? g.title : '')) + '" required>' +
         '<label for="g-target">Сколько нужно (сом)</label><input id="g-target" type="number" inputmode="numeric" min="1000" step="500" placeholder="50000" value="' + esc(draft('g-target', g ? String(g.target) : '')) + '" required>' +
-        '<div class="presets">' + [10000, 20000, 50000, 100000, 200000].map(function (v) { return '<button type="button" data-act="goalpreset" data-v="' + v + '">' + CW.formatKGS(v).replace(' сом', '') + '</button>'; }).join('') + '</div>' +
+        '<div class="presets">' + [10000, 20000, 50000, 100000, 200000].map(function (v) { return '<button type="button" data-act="goalpreset" data-v="' + v + '">' + CW.formatKGS(v).replace(/\s*сом$/, '') + '</button>'; }).join('') + '</div>' +
         '<div class="btns" style="margin-top:12px"><button class="btn ghost" type="button" data-act="goal-cancel">Отмена</button><button class="btn" type="submit">Сохранить цель</button></div></form></div>';
       return h;
     }
@@ -1530,10 +1531,10 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
       try { seen = !!localStorage.getItem(key); if (!seen) localStorage.setItem(key, '1'); } catch (e) { }
       if (!seen) setTimeout(confetti, 450);
     } else {
-      var inflow = weeklyInflow(c), weeks = Math.ceil(left / inflow), ms = c.summaries[c.me.id];
+      var inflow = weeklyInflow(c), weeks = inflow > 0 ? Math.ceil(left / inflow) : 0, ms = c.summaries[c.me.id];
       var first = ms && ms.nextDeadline ? ms.nextDeadline : c.today;
-      h += '<p style="margin-top:10px">Осталось <b class="num">' + money(left) + '</b></p>' +
-        '<p class="muted small" style="margin-top:4px">Если все платят по ' + money(c.d.settings.weekly_amount) + ' в неделю (' + money(inflow) + ' на всех), цель будет примерно через <b>' + weeks + ' ' + CW.plural(weeks, 'неделю', 'недели', 'недель') + '</b>, к ' + CW.prettyDate(CW.addDays(first, (weeks - 1) * 7), true) + '.</p>';
+      h += '<p style="margin-top:10px">Осталось <b class="num">' + money(left) + '</b></p>' + (weeks > 0 ?
+        '<p class="muted small" style="margin-top:4px">Если все платят по ' + money(c.d.settings.weekly_amount) + ' в неделю (' + money(inflow) + ' на всех), цель будет примерно через <b>' + weeks + ' ' + CW.plural(weeks, 'неделю', 'недели', 'недель') + '</b>, к ' + CW.prettyDate(CW.addDays(first, (weeks - 1) * 7), true) + '.</p>' : '');
     }
     if (isAdmin) h += '<div class="btns" style="margin-top:12px">' + btn('Изменить', 'goal-edit', '', 'ghost sm') + btn('Убрать', 'goal-del', '', 'ghost sm') + '</div>';
     return h + '</div>';
@@ -1619,7 +1620,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     var pid = c.byId[S.payMember] ? S.payMember : c.me.id, sm = c.summaries[pid];
     var isAdminMe = c.me.role === 'main_admin' || c.me.role === 'assistant_admin';
     h += '<h2>Еженедельные взносы</h2><div class="seg" role="tablist">' + c.profiles.map(function (p) {
-      return '<button data-act="paymember" data-id="' + p.id + '" class="' + (p.id === pid ? 'on' : '') + '">' + esc(p.full_name.split(' ')[0]) + '' + '</button>';
+      return '<button data-act="paymember" data-id="' + esc(p.id) + '" class="' + (p.id === pid ? 'on' : '') + '">' + esc(p.full_name.split(' ')[0]) + '' + '</button>';
     }).join('') + '</div>';
     h += '<div class="panel"><dl class="kv"><dt>Всего внесено</dt><dd class="num">' + money(sm.totalApproved) + '</dd>' +
       '<dt>Пропущено недель</dt><dd>' + sm.missedWeeks + '</dd>' +
@@ -1645,7 +1646,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     else {
       h += '<div class="panel tight list">' + shown.map(function (x) {
         var line = '';
-        if (x.status === 'rejected') line = (x.status === 'approved' ? 'Подтвердил(а): ' : 'Отклонил(а): ') + '' + esc(name(c, x.reviewed_by)) + ' · ' + CW.prettyDateTime(x.reviewed_at);
+        if (x.status !== 'pending' && x.reviewed_by) line = (x.status === 'approved' ? 'Подтвердил(а): ' : 'Отклонил(а): ') + '' + esc(name(c, x.reviewed_by)) + ' · ' + CW.prettyDateTime(x.reviewed_at);
         return '<div class="item member">' + ava(c, x.member_id) + '<div class="grow"><div class="row top"><div><b>' + esc(name(c, x.member_id)) + '</b> <span class="num plus">+' + money(x.amount) + '</span>' +
           '<div class="muted small">Отправлено ' + CW.prettyDate(x.transfer_date, true) + (x.note ? ' · ' + esc(x.note) : '') + '</div></div>' + chip(x.status, PAY_TEXT[x.status]) + '</div>' +
           (line ? '<div class="muted small" style="margin-top:4px">' + line + (x.review_note ? ' · “' + esc(x.review_note) + '”' : '') + '</div>' : '') + '</div></div>';
@@ -1743,7 +1744,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
       h += '<div class="btns noprint">' + btn('Сохранить файл', 'csv-report', 'data-month="' + ymSel + '"', 'ghost') + '</div>';
     } else {
       h += '<p class="muted" style="margin-bottom:10px">Кто что сделал и когда. Этот список нельзя изменить или удалить.</p>';
-      h += c.d.log.length ? '<div class="panel tight list">' + c.d.log.map(function (l) {
+      h += (c.d.log || []).length ? '<div class="panel tight list">' + c.d.log.map(function (l) {
         return '<div class="item"><div>' + esc(l.details) + '</div><div class="muted small">' + CW.prettyDateTime(l.created_at) + '</div></div>';
       }).join('') + '</div>' : '<div class="panel empty">Пока ничего не происходило.</div>';
     }
@@ -1792,11 +1793,17 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
         btn('Сохранить номер', 'savesupport', '', 'full ghost');
     }
     h += '</div>';
-    h += '<h2>Как добавить на экран</h2><div class="panel small stack"><p>На iPhone и iPad: откройте сайт в Safari, нажмите <b>«Поделиться»</b> (квадрат со стрелкой), затем <b>«На экран «Домой»»</b>. Кошелёк откроется как обычное приложение.</p></div>';
+    if (!IS_STANDALONE) {
+      h += '<h2>Как добавить на экран</h2><div class="panel small stack">' +
+        (installEvt ? btn('Установить на этот телефон', 'install', '', 'full') : '') +
+        '<p>На iPhone и iPad: откройте сайт в Safari, нажмите <b>«Поделиться»</b> (квадрат со стрелкой), затем <b>«На экран «Домой»»</b>.</p>' +
+        '<p>На Android: откройте сайт в Chrome, нажмите <b>⋮</b> (три точки) и выберите <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>.</p>' +
+        '<p>Кошелёк откроется как обычное приложение.</p></div>';
+    }
     return h;
   }
   function viewMore(c) {
-    var h = settingsHtml(c);
+    var h = '';
     var pend = c.d.pending || [];
     if (c.me.role === 'main_admin' && pend.length) {
       h += '<h2>Заявки на вступление</h2><div class="panel tight list">' + pend.map(function (p) {
@@ -1804,6 +1811,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
           '<div class="btns">' + btn('Принять', 'member-ok', 'data-id="' + esc(p.id) + '"', 'good sm') + btn('Отклонить', 'member-no', 'data-id="' + esc(p.id) + '"', 'bad sm') + '</div></div>';
       }).join('') + '</div>';
     }
+    h += settingsHtml(c);
     h += '<h2>Ваш профиль</h2><div class="panel"><div><b>' + esc(c.me.full_name) + '</b></div><div class="muted">' + ROLE_NAME[c.me.role] + ' · логин: ' + esc(c.me.login || '') + '</div>' +
       btn('Сменить пароль', 'chpass-open', '', 'full ghost') + btn('Выйти', 'logout', '', 'full ghost') + '</div>';
     if (S.showChPass) {
@@ -1843,7 +1851,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     var m = S.modal; if (!m) return '';
     return '<div class="modal-bg" data-act="closemodal-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="' + esc(m.title) + '"><h3>' + esc(m.title) + '</h3>' +
       '<div>' + m.body + '</div>' +
-      (m.input ? '<label for="m-input">' + esc(m.input.label) + '</label><input id="m-input" type="text" maxlength="120" placeholder="' + esc(m.input.placeholder || '') + '" value="' + esc(draft('m-input', '')) + '">' : '') +
+      (m.input ? '<label for="m-input">' + esc(m.input.label) + '</label><input id="m-input" type="text"' + (m.input.numeric ? ' inputmode="numeric"' : '') + ' maxlength="120" placeholder="' + esc(m.input.placeholder || '') + '" value="' + esc(draft('m-input', '')) + '">' : '') +
       (m.check ? '<label class="check"><input type="checkbox" id="m-check"' + (draft('m-check', false) ? ' checked' : '') + '><span>' + esc(m.check) + '</span></label>' : '') +
       '<div class="btns"><button class="btn ghost" data-act="closemodal">' + (m.hideConfirm ? 'Закрыть' : 'Назад') + '</button>' +
       (m.hideConfirm ? '' : '<button class="btn ' + (m.cls || '') + '" data-act="confirm" id="m-ok"' + (m.check && !draft('m-check', false) ? ' disabled' : '') + '>' + esc(m.confirm) + '</button>') + '</div></div></div>';
@@ -1906,6 +1914,10 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
   }
 
   // ---------------------------------------------------------------- loading & actions
+  var CACHE_KEY = 'koshelek_cache';
+  function cacheSave(d) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch (e) { } }
+  function cacheLoad() { try { var j = localStorage.getItem(CACHE_KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; } }
+  function cacheClear() { try { localStorage.removeItem(CACHE_KEY); } catch (e) { } }
   function applyData(d) {
     var j = JSON.stringify(d), changed = j !== S.lastJson;
     S.lastJson = j;
@@ -1917,6 +1929,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
   async function reload(silent) {
     try {
       var before = S.phase, d = await API.loadAll(), changed = applyData(d);
+      cacheSave(d);
       if (!S.live) { S.live = true; changed = true; }
       if (changed || !silent || before !== S.phase) {
         // on the chat screen a background refresh must not redraw (it would close the keyboard)
@@ -1945,6 +1958,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
   function clearDrafts(ids) { ids.forEach(function (i) { S.drafts[i] = undefined; }); }
 
   async function toLogin() {
+    cacheClear();
     S.phase = 'login'; S.data = null; S.uid = null; S.pendingMe = null; S.lastJson = ''; S.modal = null;
     S.tab = 'home'; S.showChPass = false; S.enter = true; S.shownBal = null;
     S.chat = { version: '', messages: [], sending: false };
@@ -1966,9 +1980,11 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     await API.init();
     API.subscribe(function () { if (S.phase === 'app' || S.phase === 'pending') reloadSoon(); });
     if (!API.hasToken()) return toLogin();
-    try { applyData(await API.loadAll()); if (S.phase === 'app') loadChat(); }
+    try { var d0 = await API.loadAll(); applyData(d0); cacheSave(d0); if (S.phase === 'app') loadChat(); }
     catch (e) {
       if (e.needLogin) { API.forget(); return toLogin(); }
+      var cached = e.offline ? cacheLoad() : null;
+      if (cached && cached.me) { applyData(cached); S.lastJson = ''; S.live = false; toast('Нет интернета. Показаны последние сохранённые данные.', true); return; }
       S.phase = 'error'; S.bootError = e.message;
     }
   }
@@ -2051,7 +2067,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
 
     if (form === 'payment') {
       var amount = parseInt(S.drafts['p-amount'] || document.getElementById('p-amount').value, 10);
-      var date = document.getElementById('p-date').value, note = document.getElementById('p-note').value;
+      var date = document.getElementById('p-date').value, note = document.getElementById('p-note').value.trim();
       if (!(amount > 0)) return toast('Введите сумму, которую вы отправили.', true);
       var okp = await run(function () { return API.rpc('submit_contribution', { p_amount: amount, p_transfer_date: date, p_note: note }); },
         'Готово! Платёж внесён, баланс обновлён.');
@@ -2059,8 +2075,9 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     }
 
     if (form === 'expense') {
-      var eamount = parseInt(document.getElementById('e-amount').value, 10), desc = document.getElementById('e-desc').value;
+      var eamount = parseInt(document.getElementById('e-amount').value, 10), desc = document.getElementById('e-desc').value.trim();
       if (!(eamount > 0)) return toast('Введите сумму.', true);
+      if (!desc) return toast('Напишите, на что нужны деньги.', true);
       var oke = await run(function () { return API.rpc('submit_expense', { p_amount: eamount, p_description: desc }); },
         (c && c.me.role !== 'member' ? 'Расход записан. Баланс обновлён.' : 'Запрос отправлен. Друзья могут голосовать.'));
       if (oke) { clearDrafts(['e-amount', 'e-desc']); render(); }
@@ -2176,6 +2193,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
           title: 'Сбросить пароль?', confirm: 'Сбросить', cls: 'bad',
           body: '<p>Новый пароль для <b>' + esc(rpM.full_name) + '</b> (логин: ' + esc(rpM.login || '') + ').</p><p class="muted" style="margin-top:6px">Потом скажите другу этот пароль. Он сможет поменять его в разделе «Ещё».</p>',
           input: { label: 'Новый пароль (не короче 6 символов)', placeholder: '' },
+          validate: function (np) { return String(np || '').trim().length < 6 ? 'Пароль должен быть не короче 6 символов.' : ''; },
           action: function (np) {
             np = String(np || '').trim();
             if (np.length < 6) { toast('Пароль должен быть не короче 6 символов.', true); return; }
@@ -2200,6 +2218,7 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
         if (S.modal) {
           var m = S.modal, text = (document.getElementById('m-input') || {}).value || '';
           if (m.check && !(document.getElementById('m-check') || {}).checked) return;
+          if (m.validate) { var vErr = m.validate(text); if (vErr) { toast(vErr, true); var mi = document.getElementById('m-input'); if (mi) mi.focus(); return; } }
           S.modal = null; S.drafts['m-input'] = undefined; S.drafts['m-check'] = undefined; render();
           await m.action(text);
         }
@@ -2224,7 +2243,8 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
         openModal({
           title: 'Записать платёж за ' + name(c, id), confirm: 'Записать', cls: 'good',
           body: '<p class="muted">Сумма добавится к балансу кошелька, дата — сегодня.</p>',
-          input: { label: 'Сумма (сом)', placeholder: '1000' },
+          input: { label: 'Сумма (сом)', placeholder: '1000', numeric: true },
+          validate: function (txt) { return parseInt(String(txt).replace(/\s/g, ''), 10) > 0 ? '' : 'Введите сумму.'; },
           action: function (txt) {
             var am = parseInt(String(txt).replace(/\s/g, ''), 10);
             if (!(am > 0)) { toast('Введите сумму.', true); return; }
@@ -2314,16 +2334,35 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
         download('obshchiy-koshelek-otchet-' + ym + '.csv', '﻿' + CW.toCSV(['Дата', 'Описание', 'Кто', 'Проверил(а)', 'Сумма (сом)'], rows), 'text/csv');
         break;
       }
+      case 'install':
+        if (!installEvt) break;
+        try { installEvt.prompt(); await installEvt.userChoice; } catch (e) { }
+        installEvt = null; render();
+        break;
       case 'backup':
         download('obshchiy-koshelek-kopiya-' + c.today + '.json', JSON.stringify({ saved_at: new Date().toISOString(), data: S.data }, null, 2));
         break;
     }
   });
 
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && S.modal) { ev.preventDefault(); closeModal(); }
+  });
+
+  // ---------------------------------------------------------------- install on Android / desktop
+  var installEvt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); installEvt = e;
+    if (S.phase === 'app' && S.tab === 'more') render();
+  });
+  window.addEventListener('appinstalled', function () { installEvt = null; toast('Кошелёк установлен.'); });
+
   // ---------------------------------------------------------------- start
   document.addEventListener('change', function (ev) {
     var f = ev.target && ev.target.id === 'ph-file' && ev.target.files && ev.target.files[0];
     if (!f) return;
+    ev.target.value = '';
+    if (!/^image\//.test(f.type || 'image/')) { toast('Это не фото. Выберите картинку.', true); return; }
     var img = new Image(), url = URL.createObjectURL(f);
     img.onload = function () {
       var sz = 160, cv = document.createElement('canvas'); cv.width = cv.height = sz;
@@ -2336,6 +2375,9 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
     img.onerror = function () { URL.revokeObjectURL(url); toast('Не удалось открыть это фото. Выберите другое.', true); };
     img.src = url;
   });
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { }); });
+  }
   applyPrefs();
   try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyPrefs); } catch (e) { }
   var splash = document.getElementById('splash');
