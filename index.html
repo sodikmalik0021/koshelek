@@ -713,6 +713,35 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 .check input { box-shadow: var(--sh-in) !important; border-radius: 8px !important; min-height: 24px !important; accent-color: #4fbf8f; }
 /* splash */
 #splash { background: radial-gradient(120% 90% at 50% 40%, #a58cf2 0%, #7a5ce0 50%, #4a3f7a 100%) !important; }
+
+/* --- v3: countdown colour, push banner, two quick buttons, wide screens --- */
+.quick.two { grid-template-columns: 1fr 1fr; }
+.cdl .cdl-bar i { background: linear-gradient(90deg, var(--cd1, #22c55e), var(--cd2, #16a34a)) !important; transition: width .6s linear; }
+.cdl .cdl-digits b { color: var(--cd2, inherit); }
+.pushbn { margin-top: 18px; padding: 14px 16px; border-radius: 24px; background: var(--clay); box-shadow: var(--sh-out); color: var(--clay-ink); display: flex; flex-direction: column; gap: 10px; }
+.pushbn .btns { display: flex; gap: 8px; }
+@media (min-width: 768px) {
+  :root { --nav-h: 76px; }
+  #app { max-width: 920px; padding-left: 132px; padding-right: 28px; padding-bottom: 40px; }
+  nav.bottom, html[data-theme="dark"] nav.bottom { left: max(18px, calc(50% - 460px)) !important; right: auto !important; top: 22px; bottom: 22px !important; width: 96px; height: auto !important; max-height: 420px; }
+  nav.bottom .inner { flex-direction: column; justify-content: flex-start; gap: 6px; padding-top: 12px; width: 100%; }
+  nav.bottom button { min-height: 82px; width: 100%; flex: none; }
+  nav.bottom button.on::before { top: 12px !important; }
+  body.typing nav.bottom { display: flex; }
+  .toast { bottom: 24px; }
+  .composer { bottom: 18px; }
+  #app.tab-chat { padding-bottom: 20px; }
+  .simcard { max-width: 520px; }
+}
+@media (min-width: 1100px) {
+  #app { max-width: 1240px; }
+  nav.bottom, html[data-theme="dark"] nav.bottom { left: max(18px, calc(50% - 610px)) !important; }
+  #app.tab-home, #app.tab-more, #app.tab-history, #app.tab-expenses, #app.tab-payments { column-count: 2; column-gap: 32px; }
+  #app.tab-home > *, #app.tab-more > *, #app.tab-history > *, #app.tab-expenses > *, #app.tab-payments > * { break-inside: avoid; }
+  #app > .topbar, #app > .backlink, #app > .msg.warn { column-span: all; }
+  #app > h2 { break-after: avoid; }
+  #app.tab-home > .simcard { margin-top: 8px; }
+}
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
@@ -1365,14 +1394,13 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 
   function viewShell(c) {
     var tabs = [
-      ['home', 'Главная', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>', 0],
-      ['payments', 'Платежи', '<path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/><path d="M3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1"/>', c.toReview.length],
+      ['home', 'Главная', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>', c.toReview.length],
       ['chat', 'Чат', '<path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9.5h8M8 12.5h5"/>', -1],
       ['more', 'Ещё', '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 0]
     ];
     var body = { home: viewHome, payments: viewPayments, expenses: viewExpenses, chat: viewChat, history: viewHistory, more: viewMore }[S.tab](c);
     var unread = chatUnread();
-    var back = (S.tab === 'history' || S.tab === 'expenses') ? '<button class="backlink" data-act="tab" data-tab="home">‹ Главная</button>' : '';
+    var back = (S.tab === 'history' || S.tab === 'expenses' || S.tab === 'payments') ? '<button class="backlink" data-act="tab" data-tab="home">‹ Главная</button>' : '';
     body = back + (S.live ? '' : '<div class="msg warn" style="margin-top:12px">Нет связи с интернетом. Показаны последние данные — изменения пока не сохранятся.</div>') + body;
     return '<div id="app" class="' + (S.enter ? 'enter ' : '') + 'tab-' + S.tab + '">' +
       '<div class="topbar"><span class="hello"><small>Привет, ' + esc(firstName(c.me)) + ' 👋</small><b>' + esc(statusLine(c)) + '</b></span>' +
@@ -1415,12 +1443,10 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     var unread = chatUnread();
     var nb = { payments: c.toReview.length, expenses: c.toVote.length + c.toPay.length };
     var items = [
-      ['payments', 'Внести', '<path d="M12 5v14M5 12h14"/>'],
       ['expenses', 'Расход', '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 9h6"/>'],
-      ['chat', 'Чат', '<path d="M4 5h16v11H9l-5 4V5z"/>'],
       ['history', 'История', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>']
     ];
-    return '<div class="quick">' + items.map(function (q) {
+    return '<div class="quick two">' + items.map(function (q) {
       return '<button data-act="tab" data-tab="' + q[0] + '"><span class="qi"><svg viewBox="0 0 24 24" aria-hidden="true">' + q[2] + '</svg>' +
         (q[0] === 'chat' ? '<span class="qb' + atCls() + '" id="qa-chat-badge"' + (unread ? '' : ' hidden') + '>' + badgeTxt() + '</span>' : nb[q[0]] ? '<span class="qb">' + nb[q[0]] + '</span>' : '') + '</span>' + q[1] + '</button>';
     }).join('') + '</div>';
@@ -1452,10 +1478,66 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       if (b) b.textContent = String(v[u]).padStart(2, '0');
       if (l) l.textContent = lab[u];
     });
+    var f = Math.max(0, Math.min(1, left / (7 * 86400000)));
+    var hue = el.classList.contains('late') ? 0 : el.classList.contains('paid') ? 145 : (f > .5 ? 48 + (f - .5) / .5 * 90 : f / .5 * 48);
+    el.style.setProperty('--cd1', 'hsl(' + hue.toFixed(0) + ',88%,58%)'); el.style.setProperty('--cd2', 'hsl(' + hue.toFixed(0) + ',85%,44%)');
     var bar = document.getElementById('cd-bar');
     if (bar) bar.style.width = (el.classList.contains('late') ? 100 : Math.max(2, Math.min(100, left / (7 * 86400000) * 100))) + '%';
     if (left === 0) { if (!S.cdRolled) { S.cdRolled = true; setTimeout(render, 1500); } }
     else S.cdRolled = false;
+  }
+
+  // ----- push notifications
+  var VAPID_PUB = 'BLNTTHcgm_a_jOYjyBeCJBXj_R9FzSbxdO_rC4GA9OAzo4J2bD4Uw5osVdwp9_xfBHI-jDL0GzsAP2kO1d10KCs';
+  function b64u8(b) { var p = '='.repeat((4 - b.length % 4) % 4), r = atob((b + p).replace(/-/g, '+').replace(/_/g, '/')), o = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) o[i] = r.charCodeAt(i); return o; }
+  function bufB64(buf) { var a = new Uint8Array(buf), s = ''; for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+  async function pushState() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return IS_IOS && !IS_STANDALONE ? 'install' : 'none';
+    if (IS_IOS && !IS_STANDALONE) return 'install';
+    if (Notification.permission === 'denied') return 'denied';
+    if (Notification.permission !== 'granted') return 'off';
+    try { var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); return sub ? 'on' : 'off'; } catch (e) { return 'off'; }
+  }
+  async function pushSend(sub) {
+    var j = sub.toJSON(), k = j.keys || {};
+    await API.rpc('push_subscribe', { p_endpoint: sub.endpoint, p_p256dh: k.p256dh, p_auth: k.auth });
+  }
+  async function pushEnable() {
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') { S.pushState = perm === 'denied' ? 'denied' : 'off'; return; }
+    var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u8(VAPID_PUB) });
+    await pushSend(sub); S.pushState = 'on';
+  }
+  async function pushDisable() {
+    try {
+      var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+      if (sub) { try { await API.rpc('push_unsubscribe', { p_endpoint: sub.endpoint }); } catch (e) { } await sub.unsubscribe(); }
+    } catch (e) { }
+    S.pushState = 'off';
+  }
+  async function refreshPush() {
+    var st = await pushState();
+    if (st === 'on') { try { var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); if (sub) await pushSend(sub); } catch (e) { } }
+    if (st !== S.pushState) { S.pushState = st; if (S.phase === 'app' && !S.modal && S.tab !== 'chat') render(); }
+  }
+  function pushDismissed() { try { return localStorage.getItem('koshelek_push_hide') === '1'; } catch (e) { return false; } }
+  function pushBanner() {
+    var st = S.pushState;
+    if (pushDismissed() || (st !== 'off' && st !== 'install')) return '';
+    if (st === 'off') return '<div class="pushbn"><div class="pb-t"><b>🔔 Включите уведомления</b><div class="muted small">Узнавайте сразу: кто внёс платёж, новый расход, сообщение в чате.</div></div>' +
+      '<div class="btns">' + btn('Включить', 'push-on', '', 'sm') + btn('Позже', 'push-hide', '', 'sm ghost') + '</div></div>';
+    return '<div class="pushbn"><div class="pb-t"><b>🔔 Уведомления на iPhone и iPad</b><div class="muted small">Откройте сайт в Safari → «Поделиться» → «На экран Домой». Потом запустите кошелёк с иконки и включите уведомления.</div></div>' +
+      '<div class="btns">' + btn('Понятно', 'push-hide', '', 'sm ghost') + '</div></div>';
+  }
+  function pushPanel() {
+    var st = S.pushState, h = '<h2>Уведомления</h2><div class="panel"><div class="set">';
+    if (st === 'on') h += '<b>🔔 Включены</b><div class="muted small">Придут: платежи, расходы, чат, заявки.</div>' + btn('Выключить', 'push-off', '', 'full ghost');
+    else if (st === 'off') h += '<b>Уведомления выключены</b><div class="muted small">Включите, чтобы узнавать о платежах и сообщениях сразу.</div>' + btn('Включить уведомления', 'push-on', '', 'full');
+    else if (st === 'denied') h += '<b>Уведомления запрещены</b><div class="muted small">Откройте Настройки телефона → Уведомления → Общий кошелёк и разрешите их.</div>';
+    else if (st === 'install') h += '<b>Сначала добавьте на экран «Домой»</b><div class="muted small">На iPhone и iPad уведомления работают только в приложении с иконки. Safari → «Поделиться» → «На экран Домой», затем откройте кошелёк с иконки.</div>';
+    else h += '<b>Не поддерживается</b><div class="muted small">Этот браузер не умеет уведомления. Попробуйте Safari (iPhone) или Chrome (Android, компьютер).</div>';
+    return h + '</div></div>';
   }
 
   // ----- CHAT
@@ -1626,7 +1708,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     if (c.bal.approvedNotPaid > 0) h += '<span class="note-chip">Одобрено, ещё не оплачено: <b>' + money(c.bal.approvedNotPaid) + '</b></span>';
     h += '</div>';
     if (s.setup_done) {
-      h += statTiles(c) + inboxHtml(c);
+      h += pushBanner() + statTiles(c) + inboxHtml(c);
       var mm = c.summaries[c.me.id], due = mm ? mm.toPayNow : 0;
       h += '<button class="cta-big" data-act="tab" data-tab="payments">＋ Внести ' + (due > 0 ? money(due) : '') + '</button>';
     }
@@ -1967,7 +2049,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
   function settingsHtml(c) {
     var th = getPref('theme') || 'auto', ph = c.d.settings.support_phone || '', digits = normPhone(ph);
     var meP = c.byId[c.me.id], hasPh = meP && meP.avatar;
-    var h = '<h2>Настройки</h2><div class="panel"><div class="set"><div class="row" style="align-items:center;gap:12px">' + ava(c, c.me.id, 'lg') +
+    var h = pushPanel() + '<h2>Настройки</h2><div class="panel"><div class="set"><div class="row" style="align-items:center;gap:12px">' + ava(c, c.me.id, 'lg') +
       '<div class="grow"><b>Фото профиля</b><div class="muted small">Необязательно. Без фото будет первая буква имени.</div>' +
       '<div class="btns" style="margin-top:8px"><label class="btn small ghost" style="cursor:pointer;margin:0">Выбрать фото<input id="ph-file" type="file" accept="image/*" hidden></label>' +
       (hasPh ? btn('Убрать', 'rmphoto', '', 'ghost small') : '') + '</div></div></div></div><div class="set"><b>Тема</b><div class="seg" style="margin:8px 0 0">' + [['auto', 'Авто'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(function (t) {
@@ -2130,6 +2212,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
         if (!(silent && before === S.phase && S.tab === 'chat' && document.getElementById('chat-list'))) render();
       }
       if (S.phase === 'app' && d.chat_version && d.chat_version !== S.chat.version) loadChat();
+      if (S.phase === 'app' && !S.pushChecked) { S.pushChecked = true; refreshPush(); }
     } catch (e) {
       if (e.needLogin) { API.forget(); await toLogin(); if (!silent) toast(e.message, true); return; }
       if (e.offline && S.live) { S.live = false; render(); }
@@ -2174,7 +2257,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     await API.init();
     API.subscribe(function () { if (S.phase === 'app' || S.phase === 'pending') reloadSoon(); });
     if (!API.hasToken()) return toLogin();
-    try { var d0 = await API.loadAll(); applyData(d0); cacheSave(d0); if (S.phase === 'app') loadChat(); }
+    try { var d0 = await API.loadAll(); applyData(d0); cacheSave(d0); if (S.phase === 'app') { loadChat(); S.pushChecked = true; refreshPush(); } }
     catch (e) {
       if (e.needLogin) { API.forget(); return toLogin(); }
       var cached = e.offline ? cacheLoad() : null;
@@ -2354,6 +2437,12 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       case 'closemodal': closeModal(); break;
       case 'refresh': reload(); break;
       case 'logintab': S.loginTab = t.getAttribute('data-tab'); render(); break;
+      case 'push-on':
+        try { await pushEnable(); toast(S.pushState === 'on' ? 'Уведомления включены.' : 'Уведомления не включены.', S.pushState !== 'on'); }
+        catch (er) { toast('Не получилось включить: ' + (er && er.message ? er.message : 'ошибка'), true); }
+        render(); break;
+      case 'push-off': await pushDisable(); toast('Уведомления выключены.'); render(); break;
+      case 'push-hide': try { localStorage.setItem('koshelek_push_hide', '1'); } catch (er) { } render(); break;
       case 'chpass-open': S.showChPass = !S.showChPass; render(); break;
 
       case 'logout':
