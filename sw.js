@@ -4,7 +4,7 @@
  * Always tries the network first, so updates arrive right away.
  * Wallet data (Supabase) is never cached here.
  */
-var CACHE = 'koshelek-v15';
+var CACHE = 'koshelek-v16';
 var FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -20,6 +20,7 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  if (/\.(mp4|webm)$/.test(new URL(req.url).pathname)) return; // видео не через кэш: нужны Range-запросы
   e.respondWith(Promise.race([fetch(req), new Promise(function (_, rej) { setTimeout(rej, 5000); })]).then(function (res) {
     if (res && res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
     return res;
