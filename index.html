@@ -805,6 +805,15 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 .stkpanel button:active .stk { transform: scale(.93); }
 @media (prefers-reduced-motion: reduce) { .achov *, .stk, .stk .ic-l { animation: none !important; } .achov-shine { display: none; } }
 .chat-empty .ic-l { display: none; }
+.stktabs { display: flex; gap: 6px; width: 100%; padding: 4px 10px 0; }
+.stktabs button { border: 0; padding: 7px 16px; border-radius: 999px; background: rgba(124,58,237,.1); color: var(--ink-soft); font: inherit; font-size: 13px; cursor: pointer; box-shadow: none !important; }
+.stktabs button.on { background: #6d3ae8; color: #fff; }
+.gifpanel { width: 100%; padding: 8px 10px; }
+.gifpanel input { width: 100%; margin-bottom: 8px; }
+.gifgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 300px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.gifgrid button { border: 0; padding: 0; background: rgba(124,58,237,.08); border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: none !important; min-height: 70px; }
+.gifgrid img { width: 100%; display: block; }
+.gifmsg { display: block; width: 200px; max-width: 100%; border-radius: 16px; }
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
@@ -1669,6 +1678,8 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       var cont = prev && prev.member_id === m.member_id && (new Date(m.created_at) - new Date(prev.created_at)) < 5 * 60000;
       var canDel = !m.deleted && (mine || isMain);
       var isStk = !m.deleted && /^§st:[a-z]+$/.test(m.body || '') && stickerHtml(m.body.slice(4));
+      var gm = !m.deleted && /^§gif:[A-Za-z0-9]+$/.exec(m.body || '');
+      if (gm) isStk = '<img class="gifmsg" loading="lazy" alt="GIF" src="https://media.giphy.com/media/' + gm[0].slice(5) + '/200w.gif">';
       var body = m.deleted ? '<span class="gone">Сообщение удалено</span>' : (isStk || mentionHtml(m.body));
       var tome = !m.deleted && !mine && mentionsMe(m.body);
       var bubble = '<' + (canDel ? 'button data-act="msg-menu" data-id="' + m.id + '"' : 'div') + ' class="bubble' + (isStk ? ' stk-b' : '') + (m.deleted ? ' deleted' : '') + (tome ? ' tome' : '') + '">' +
@@ -1688,7 +1699,9 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     return '<h2>Общий чат</h2><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
       '<form data-form="chat" class="composer" autocomplete="off">' +
       '<div class="mchips">' + c.profiles.filter(function (p) { return p.id !== c.me.id; }).map(function (p) { return '<button type="button" data-act="mention" data-n="' + esc(firstName(p)) + '">@' + esc(firstName(p)) + '</button>'; }).join('') + '</div>' +
-      (S.stkOpen ? '<div class="stkpanel">' + STICKERS.map(function (q) { return '<button type="button" data-act="stk-send" data-k="' + q[0] + '" aria-label="' + q[1] + '">' + stickerHtml(q[0]) + '</button>'; }).join('') + '</div>' : '') +
+      (S.stkOpen ? '<div class="stktabs"><button type="button" data-act="stk-tab" data-v="st" class="' + (S.stkTab !== 'gif' ? 'on' : '') + '">Стикеры</button><button type="button" data-act="stk-tab" data-v="gif" class="' + (S.stkTab === 'gif' ? 'on' : '') + '">GIF</button></div>' : '') +
+      (S.stkOpen && S.stkTab === 'gif' ? '<div class="gifpanel"><input id="gif-q" type="search" placeholder="Поиск GIF…" autocomplete="off"><div class="gifgrid" id="gif-grid">' + gifGridHtml(S.gifs) + '</div><div class="muted small" style="text-align:center;padding:4px">Powered by GIPHY</div></div>' : '') +
+      (S.stkOpen && S.stkTab !== 'gif' ? '<div class="stkpanel">' + STICKERS.map(function (q) { return '<button type="button" data-act="stk-send" data-k="' + q[0] + '" aria-label="' + q[1] + '">' + stickerHtml(q[0]) + '</button>'; }).join('') + '</div>' : '') +
       '<button type="button" class="stkbtn" data-act="stk-toggle" aria-label="Стикеры">' + icon('smile', 24) + '</button>' +
       '<input id="chat-input" type="text" maxlength="1000" placeholder="Сообщение…" enterkeyhint="send" autocomplete="off" aria-label="Сообщение">' +
       '<button type="submit" class="send" aria-label="Отправить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg></button></form>';
@@ -1848,6 +1861,25 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
   IC_PATHS.shield = '<path d="M12 2.5 4.5 5.5v6c0 4.8 3.2 8.2 7.5 10 4.3-1.8 7.5-5.2 7.5-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>';
   IC_PATHS.up = '<path d="M6 18 18 6M18 6H9M18 6v9"/>';
   IC_PATHS.smile = '<circle cx="12" cy="12" r="9"/><path d="M8.5 14c1 1.5 2 2 3.5 2s2.5-.5 3.5-2M9 9.5v.5M15 9.5v.5"/>';
+  var GIPHY_KEY = '';
+  var gifTimer = null, gifSeq = 0;
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'gif-q') { var v = e.target.value.trim(); clearTimeout(gifTimer); gifTimer = setTimeout(function () { gifLoad(v); }, 450); } });
+  function gifGridHtml(list) {
+    if (!GIPHY_KEY) return '<div class="muted small" style="padding:14px;grid-column:1/-1">GIF скоро появятся.</div>';
+    if (!list) return '<div class="muted small" style="padding:14px;grid-column:1/-1">Загрузка…</div>';
+    if (!list.length) return '<div class="muted small" style="padding:14px;grid-column:1/-1">Ничего не нашлось.</div>';
+    return list.map(function (g) { return '<button type="button" data-act="gif-send" data-k="' + esc(g.id) + '"><img loading="lazy" alt="" src="' + esc(g.u) + '"></button>'; }).join('');
+  }
+  function gifLoad(q) {
+    if (!GIPHY_KEY) return;
+    var my = ++gifSeq;
+    var url = 'https://api.giphy.com/v1/gifs/' + (q ? 'search' : 'trending') + '?api_key=' + GIPHY_KEY + '&limit=24&rating=pg&lang=ru' + (q ? '&q=' + encodeURIComponent(q) : '');
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      if (my !== gifSeq) return;
+      S.gifs = (j.data || []).map(function (g) { return { id: g.id, u: g.images.fixed_width_small.url }; });
+      var el = document.getElementById('gif-grid'); if (el) el.innerHTML = gifGridHtml(S.gifs);
+    }).catch(function () { if (my !== gifSeq) return; S.gifs = []; var el = document.getElementById('gif-grid'); if (el) el.innerHTML = gifGridHtml([]); });
+  }
   var STICKERS = [
     ['paid', 'Оплатил', 'coin', '#6d3ae8', '#a855f7'], ['soon', 'Сейчас оплачу', 'clock', '#0ea5e9', '#6366f1'],
     ['thanks', 'Спасибо', 'heart', '#ec4899', '#f43f5e'], ['good', 'Молодец', 'star', '#f59e0b', '#ef4444'],
@@ -2579,6 +2611,13 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
         break;
       }
       case 'stk-toggle': S.stkOpen = !S.stkOpen; render(); break;
+      case 'stk-tab': S.stkTab = t.getAttribute('data-v'); if (S.stkTab === 'gif' && !S.gifs) gifLoad(''); render(); break;
+      case 'gif-send': {
+        var gk = t.getAttribute('data-k'); S.stkOpen = false;
+        try { await API.rpc('send_message', { p_body: '§gif:' + gk }); S.chatToEnd = true; await loadChat(); } catch (eg) { toast('Не удалось отправить. Попробуйте ещё раз.', true); }
+        render();
+        break;
+      }
       case 'stk-send': {
         var sk = t.getAttribute('data-k'); S.stkOpen = false;
         try { await API.rpc('send_message', { p_body: '§st:' + sk }); S.chatToEnd = true; await loadChat(); } catch (es) { toast('Не удалось отправить. Попробуйте ещё раз.', true); }
