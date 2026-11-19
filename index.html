@@ -1876,8 +1876,21 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     var s = c.d.settings, h = '';
     if (!s.setup_done) return '<div class="msg warn" style="margin-top:14px">Настройка ещё не завершена.</div>';
 
+    if (!S.payInfo && !S.payInfoLoading && S.phase === 'app') {
+      S.payInfoLoading = true;
+      API.rpc('pay_info', {}).then(function (x) { S.payInfo = x || {}; S.payInfoLoading = false; render(); }, function () { S.payInfoLoading = false; });
+    }
+    var pi = S.payInfo || {};
+    if (pi.card) {
+      h += '<h2>Куда переводить</h2><div class="panel">' +
+        '<div class="muted small">Simbank · ' + esc(pi.holder || '') + '</div>' +
+        '<div class="big num" style="letter-spacing:1px;margin:6px 0">' + esc(pi.card.replace(/(\d{4})(?=\d)/g, '$1 ')) + '</div>' +
+        '<div class="btns">' + btn('Скопировать номер карты', 'copy-card', '', '') +
+        (pi.link ? '<a class="btn ghost" href="' + esc(pi.link) + '" target="_blank" rel="noopener">Оплатить по QR (откроет банк)</a>' : '') + '</div>' +
+        '<p class="muted small" style="margin-top:8px">Оплатили в банке? Вернитесь сюда и впишите сумму ниже.</p></div>';
+    }
     h += '<h2>Я отправил(а) деньги</h2><div class="panel"><form data-form="payment">' +
-      '<p class="muted">Переведите деньги на карту Simbank и впишите сумму. Дата ставится сама.</p>' +
+      '<p class="muted">Дата ставится сама.</p>' +
       '<label for="p-amount">Сколько вы отправили (сом)</label><input id="p-amount" type="number" inputmode="numeric" min="1" step="1" placeholder="1000" value="' + esc(draft('p-amount', '')) + '" required>' +
       '<input id="p-date" type="hidden" value="' + c.today + '">' +
       '<details style="margin-top:8px"' + (draft('p-note', '') ? ' open' : '') + '><summary class="muted small" style="cursor:pointer">Добавить заметку</summary>' +
@@ -2445,11 +2458,16 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       case 'push-hide': try { localStorage.setItem('koshelek_push_hide', '1'); } catch (er) { } render(); break;
       case 'chpass-open': S.showChPass = !S.showChPass; render(); break;
 
+      case 'copy-card':
+        try { await navigator.clipboard.writeText((S.payInfo || {}).card || ''); toast('Номер карты скопирован.'); }
+        catch (e) { toast('Не получилось скопировать. Номер: ' + ((S.payInfo || {}).card || ''), true); }
+        break;
+
       case 'logout':
         openModal({
           title: 'Выйти из кошелька?', confirm: 'Выйти', cls: 'bad',
           body: '<p class="muted">Чтобы войти снова, понадобятся логин и пароль.</p>',
-          action: async function () { try { await pushDisable(); } catch (e) { } await API.logout(); S.drafts = {}; S.pushChecked = false; await toLogin(); }
+          action: async function () { try { await pushDisable(); } catch (e) { } await API.logout(); S.drafts = {}; S.pushChecked = false; S.payInfo = null; await toLogin(); }
         });
         break;
 
