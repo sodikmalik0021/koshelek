@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Общий кошелёк</title>
+<title>Квартет</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Кошелёк">
+<meta name="apple-mobile-web-app-title" content="Квартет">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#e9e4f7">
 <meta name="format-detection" content="telephone=no">
@@ -864,7 +864,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       <circle cx="162" cy="38" r="2"/><circle cx="38" cy="162" r="2"/><circle cx="162" cy="162" r="2"/><circle cx="38" cy="38" r="2"/>
     </g>
   </svg>
-  <div class="sp-name">Общий кошелёк</div>
+  <div class="sp-name">Квартет</div>
   <div class="bar"><i></i></div>
 </div>
 <div id="root"></div>
@@ -1455,7 +1455,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
   // ---------------------------------------------------------------- screens
   function viewError() {
-    return '<div class="login"><h1>Общий кошелёк</h1><div class="msg danger" style="margin-top:16px">' + esc(S.bootError) +
+    return '<div class="login"><h1>Квартет</h1><div class="msg danger" style="margin-top:16px">' + esc(S.bootError) +
       '</div>' + btn('Попробовать снова', 'reload', '', 'full') + '</div>';
   }
   function registerForm(first) {
@@ -1469,7 +1469,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       '<button class="btn full" type="submit">' + (first ? 'Создать кошелёк' : 'Отправить заявку') + '</button></form>';
   }
   function viewLogin() {
-    var h = '<div class="login"><h1>Общий кошелёк</h1>';
+    var h = '<div class="login"><h1>Квартет</h1>';
     if (!S.hasAdmin) {
       h += '<p class="muted">Добро пожаловать! Вы первый, поэтому станете <b>главным администратором</b>. Придумайте логин и пароль.</p>' + registerForm(true);
       return h + '</div>';
@@ -1490,7 +1490,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   }
   function viewPending() {
     var me = S.pendingMe || {};
-    return '<div class="login"><h1>Общий кошелёк</h1>' +
+    return '<div class="login"><h1>Квартет</h1>' +
       '<div class="msg info" style="margin-top:16px">Здравствуйте, <b>' + esc(me.name) + '</b>! Ваша заявка отправлена. Главный администратор должен подтвердить вас. Как только он это сделает, кошелёк откроется сам.</div>' +
       '<p class="muted small" style="margin-top:8px">Ваш логин: <b>' + esc(me.login) + '</b></p>' +
       btn('Проверить снова', 'refresh', '', 'full') + btn('Выйти', 'logout', '', 'full ghost') + '</div>';
@@ -1638,7 +1638,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var st = S.pushState, h = '<h2>Уведомления</h2><div class="panel"><div class="set">';
     if (st === 'on') h += '<b>Уведомления включены</b><div class="muted small">Придут: платежи, расходы, чат, заявки.</div>' + btn('Выключить', 'push-off', '', 'full ghost');
     else if (st === 'off') h += '<b>Уведомления выключены</b><div class="muted small">Включите, чтобы узнавать о платежах и сообщениях сразу.</div>' + btn('Включить уведомления', 'push-on', '', 'full');
-    else if (st === 'denied') h += '<b>Уведомления запрещены</b><div class="muted small">Откройте Настройки телефона → Уведомления → Общий кошелёк и разрешите их.</div>';
+    else if (st === 'denied') h += '<b>Уведомления запрещены</b><div class="muted small">Откройте Настройки телефона → Уведомления → Квартет и разрешите их.</div>';
     else if (st === 'install') h += '<b>Сначала добавьте на экран «Домой»</b><div class="muted small">На iPhone и iPad уведомления работают только в приложении с иконки. Safari → «Поделиться» → «На экран Домой», затем откройте кошелёк с иконки.</div>';
     else h += '<b>Не поддерживается</b><div class="muted small">Этот браузер не умеет уведомления. Попробуйте Safari (iPhone) или Chrome (Android, компьютер).</div>';
     return h + '</div></div>';
@@ -2498,10 +2498,10 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     else if (S.phase === 'error') html = viewError();
     else if (S.phase === 'login') html = viewLogin();
     else if (S.phase === 'pending') html = viewPending();
-    else if (S.phase === 'app' && !S.data) html = '<div class="login"><h1>Общий кошелёк</h1><p class="muted">Загрузка кошелька…</p></div>';
+    else if (S.phase === 'app' && !S.data) html = '<div class="login"><h1>Квартет</h1><p class="muted">Загрузка кошелька…</p></div>';
     else if (S.phase === 'app') {
       var c = derive();
-      html = c.me ? viewShell(c) : '<div class="login"><h1>Общий кошелёк</h1><p class="muted">Загрузка кошелька…</p></div>';
+      html = c.me ? viewShell(c) : '<div class="login"><h1>Квартет</h1><p class="muted">Загрузка кошелька…</p></div>';
     }
     ROOT.innerHTML = html;
     // put back what the person was typing
@@ -2908,7 +2908,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
       case 'sharelink':
         if (navigator.share) {
-          try { await navigator.share({ title: 'Общий кошелёк', text: 'Наш общий кошелёк. Нажмите «Я новый участник» и придумайте логин и пароль.', url: siteLink() }); } catch (e) { }
+          try { await navigator.share({ title: 'Квартет', text: 'Наш общий «Квартет». Нажмите «Я новый участник» и придумайте логин и пароль.', url: siteLink() }); } catch (e) { }
           break;
         }
         /* falls through */
