@@ -62,7 +62,7 @@ h1, h2, h3, p { margin: 0; }
 @keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ---------- layout ---------- */
-#app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(var(--nav-h) + 28px); min-height: 100vh; }
+#app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(var(--nav-h) + 28px); min-height: 100vh; min-height: 100dvh; }
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 10px; }
 .topbar .brand { font: 700 18px Georgia, serif; color: var(--lake); }
 .topbar .who { font-size: 14px; color: var(--ink-soft); text-align: right; }
@@ -1461,7 +1461,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       : paid ? 'Эта неделя оплачена ✓'
       : 'К оплате за неделю: <b>' + money(m.current.remaining) + '</b>';
     return '<button class="cdl ' + state + '" id="cd" data-act="tab" data-tab="payments" data-target="' + target + '">' +
-      '<span class="cdl-top"><span class="cdl-label">' + (m.debt > 0 ? 'Срок прошёл' : 'До субботы') + '</span>' +
+      '<span class="cdl-top"><span class="cdl-label">' + (m.debt > 0 ? 'Есть долг · до субботы' : 'До субботы') + '</span>' +
       '<span class="cdl-digits">' + ['d', 'h', 'm', 's'].map(function (u) {
         return '<b id="cd-' + u + '">00</b><small id="cd-' + u + 'l"></small>';
       }).join('') + '</span></span>' +
@@ -1877,7 +1877,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     if (!s.setup_done) return '<div class="msg warn" style="margin-top:14px">Настройка ещё не завершена.</div>';
 
     h += '<h2>Я отправил(а) деньги</h2><div class="panel"><form data-form="payment">' +
-      '<p class="muted">Переведите деньги на карту Simbank и впишите сумму. Баланс обновится сразу, дата ставится сама.</p>' +
+      '<p class="muted">Переведите деньги на карту Simbank и впишите сумму. Дата ставится сама.</p>' +
       '<label for="p-amount">Сколько вы отправили (сом)</label><input id="p-amount" type="number" inputmode="numeric" min="1" step="1" placeholder="1000" value="' + esc(draft('p-amount', '')) + '" required>' +
       '<input id="p-date" type="hidden" value="' + c.today + '">' +
       '<details style="margin-top:8px"' + (draft('p-note', '') ? ' open' : '') + '><summary class="muted small" style="cursor:pointer">Добавить заметку</summary>' +
@@ -2347,7 +2347,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       var date = document.getElementById('p-date').value, note = document.getElementById('p-note').value.trim();
       if (!(amount > 0)) return toast('Введите сумму, которую вы отправили.', true);
       var okp = await run(function () { return API.rpc('submit_contribution', { p_amount: amount, p_transfer_date: date, p_note: note }); },
-        'Готово! Платёж внесён, баланс обновлён.');
+        'Готово! Платёж записан.');
       if (okp) { clearDrafts(['p-amount', 'p-note', 'p-date']); render(); }
     }
 
@@ -2449,7 +2449,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
         openModal({
           title: 'Выйти из кошелька?', confirm: 'Выйти', cls: 'bad',
           body: '<p class="muted">Чтобы войти снова, понадобятся логин и пароль.</p>',
-          action: async function () { await API.logout(); S.drafts = {}; await toLogin(); }
+          action: async function () { try { await pushDisable(); } catch (e) { } await API.logout(); S.drafts = {}; S.pushChecked = false; await toLogin(); }
         });
         break;
 
