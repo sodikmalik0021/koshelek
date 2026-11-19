@@ -1889,7 +1889,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
         '<div class="muted small">Simbank · ' + esc(pi.holder || '') + '</div>' +
         '<div class="big num" style="letter-spacing:1px;margin:6px 0">' + esc(pi.card.replace(/(\d{4})(?=\d)/g, '$1 ')) + '</div>' +
         '<div class="btns">' + btn('Скопировать номер карты', 'copy-card', '', '') +
-        (pi.link ? '<a class="btn ghost" href="' + esc(pi.link) + '" target="_blank" rel="noopener">Оплатить по QR (откроет банк)</a>' : '') + '</div>' +
+        (pi.link ? '<a class="btn ghost" data-payqr="1" href="' + esc(pi.link) + '" target="_blank" rel="noopener">Оплатить по QR (откроет банк)</a>' : '') + '</div>' +
         '<p class="muted small" style="margin-top:8px">Оплатили в банке? Вернитесь сюда и впишите сумму ниже.</p></div>';
     }
     h += '<h2>Я отправил(а) деньги</h2><div class="panel"><form data-form="payment">' +
@@ -2388,6 +2388,24 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       });
     }
 
+  });
+
+  // после оплаты в банке: вернулись в программу — спросить и записать платёж одним нажатием
+  document.addEventListener('click', function (ev) {
+    if (ev.target.closest && ev.target.closest('a[data-payqr]')) S.payWait = Date.now();
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible' || !S.payWait || S.phase !== 'app' || !S.data) return;
+    var waited = Date.now() - S.payWait; S.payWait = 0;
+    if (waited < 8000 || waited > 30 * 60000) return;
+    var c = derive(), mm = c.me && c.summaries[c.me.id], sum = (mm && mm.toPayNow > 0) ? mm.toPayNow : 1000;
+    openModal({
+      title: 'Вы оплатили ' + money(sum) + '?', confirm: 'Да, записать',
+      body: '<p class="muted">Если вы перевели эту сумму на карту Simbank, нажмите «Да, записать». Другая сумма — закройте и впишите её в поле ниже.</p>',
+      action: async function () {
+        await run(function () { return API.rpc('submit_contribution', { p_amount: sum, p_transfer_date: c.today, p_note: '' }); }, 'Готово! Платёж записан.');
+      }
+    });
   });
 
   document.addEventListener('click', async function (ev) {
