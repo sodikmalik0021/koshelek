@@ -1245,6 +1245,9 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       await call('wallet_' + name, Object.assign({ p_token: token }, args || {}));
       return null;
     },
+    rpcGet: async function (name, args) {
+      return await call('wallet_' + name, Object.assign({ p_token: token }, args || {}));
+    },
     subscribe: function (onChange, onStatus) {
       changeCb = onChange; statusCb = onStatus || null;
       clearInterval(pollTimer);
@@ -1878,7 +1881,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 
     if (!S.payInfo && !S.payInfoLoading && S.phase === 'app') {
       S.payInfoLoading = true;
-      API.rpc('pay_info', {}).then(function (x) { S.payInfo = x || {}; S.payInfoLoading = false; render(); }, function () { S.payInfoLoading = false; });
+      API.rpcGet('pay_info', {}).then(function (x) { S.payInfo = x || {}; S.payInfoLoading = false; render(); }, function () { S.payInfoLoading = false; });
     }
     var pi = S.payInfo || {};
     if (pi.card) {
