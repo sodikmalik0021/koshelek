@@ -1884,13 +1884,9 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       API.rpcGet('pay_info', {}).then(function (x) { S.payInfo = x || {}; S.payInfoLoading = false; render(); }, function () { S.payInfoLoading = false; });
     }
     var pi = S.payInfo || {};
-    if (pi.card) {
-      h += '<h2>Куда переводить</h2><div class="panel">' +
-        '<div class="muted small">Simbank · ' + esc(pi.holder || '') + '</div>' +
-        '<div class="big num" style="letter-spacing:1px;margin:6px 0">' + esc(pi.card.replace(/(\d{4})(?=\d)/g, '$1 ')) + '</div>' +
-        '<div class="btns">' + btn('Скопировать номер карты', 'copy-card', '', '') +
-        (pi.link ? '<a class="btn ghost" data-payqr="1" href="' + esc(pi.link) + '" target="_blank" rel="noopener">Оплатить по QR (откроет банк)</a>' : '') + '</div>' +
-        '<p class="muted small" style="margin-top:8px">Оплатили в банке? Вернитесь сюда и впишите сумму ниже.</p></div>';
+    if (pi.link) {
+      h += '<a class="cta-big" data-payqr="1" href="' + esc(pi.link) + '" target="_blank" rel="noopener" style="text-align:center;line-height:62px;text-decoration:none">Выбрать банк</a>' +
+        '<p class="muted small" style="margin:8px 4px 0">Оплатили в банке? Вернитесь сюда, программа сама спросит про платёж.</p>';
     }
     h += '<h2>Я отправил(а) деньги</h2><div class="panel"><form data-form="payment">' +
       '<p class="muted">Дата ставится сама.</p>' +
