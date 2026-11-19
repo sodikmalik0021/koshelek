@@ -838,6 +838,11 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 .chat-top { position: sticky; top: 0; z-index: 8; margin: 0 -4px; padding: env(safe-area-inset-top) 4px 2px; background: rgba(238,233,252,.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 .chat-top h2 { margin: 6px 0; }
+.callfloat { position: fixed; z-index: 120; left: 10px; right: 10px; top: calc(env(safe-area-inset-top) + 8px); display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 18px; background: linear-gradient(135deg, #16a34a, #0d9488); color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.28); animation: achCard .4s ease both; }
+.callfloat > div { flex: 1; }
+.callfloat .callbtn { background: rgba(255,255,255,.24); color: #fff; }
+.call-hint { text-align: center; color: rgba(255,255,255,.8); font-size: 14px; min-height: 0; padding: 0 12px; }
+.call-hint:not(:empty) { padding: 8px 12px; }
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
@@ -1720,7 +1725,6 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     return h;
   }
   function viewChat(c) {
-    callIdlePoll();
     return '<div class="chat-top"><div class="chat-head"><h2>Общий чат</h2><span class="chat-calls"><button type="button" class="callbtn" data-act="call-audio" aria-label="Позвонить">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Видеозвонок">' + icon('video', 22) + '</button></span></div>' +
       '<div id="callbn">' + callBannerHtml() + '</div></div><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
       '<form data-form="chat" class="composer" autocomplete="off">' +
@@ -1927,25 +1931,30 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   IC_PATHS.videooff = '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10l5-3v10l-5-3zM4 4l16 16"/>';
   var CALL = null;
   var ICE_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
-  function callBannerHtml() {
-    var p = S.callPeers || [];
-    if (CALL || !p.length) return '';
-    return '<div class="callbn"><div><b>Идёт звонок</b><div class="muted small">' + p.map(function (x) { return esc(String(x.name).split(' ')[0]); }).join(', ') + '</div></div>' +
-      '<button type="button" class="callbtn" data-act="call-audio" aria-label="Войти со звуком">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Войти с видео">' + icon('video', 22) + '</button></div>';
+  function callBannerHtml() { return ''; }
+  function callBannerUpdate() {
+    var p = S.callPeers || [], el = document.getElementById('callfloat');
+    var show = !CALL && p.length && S.phase === 'app';
+    if (!show) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement('div'); el.id = 'callfloat'; el.className = 'callfloat'; document.body.appendChild(el); }
+    var html = '<div><b>Идёт звонок</b><div class="small">' + p.map(function (x) { return esc(String(x.name).split(' ')[0]); }).join(', ') + '</div></div>' +
+      '<button type="button" class="callbtn" data-act="call-audio" aria-label="Войти со звуком">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Войти с видео">' + icon('video', 22) + '</button>';
+    if (el.getAttribute('data-h') !== html) { el.setAttribute('data-h', html); el.innerHTML = html; }
   }
-  function callBannerUpdate() { var el = document.getElementById('callbn'); if (el) el.innerHTML = callBannerHtml(); }
   var idleTimer = null;
+  async function callIdleOnce() {
+    if (CALL || S.phase !== 'app' || !S.data || document.hidden) return;
+    try {
+      var r = await API.rpcGet('call_poll', { p_after: 0 });
+      S.callPeers = (r && r.peers || []).filter(function (x) { return x.id !== S.uid; });
+      callBannerUpdate();
+    } catch (e) { }
+  }
   function callIdlePoll() {
     if (idleTimer) return;
-    idleTimer = setInterval(async function () {
-      if (CALL || S.phase !== 'app' || S.tab !== 'chat' || document.hidden) return;
-      try {
-        var r = await API.rpcGet('call_poll', { p_after: 0 });
-        var prev = JSON.stringify(S.callPeers || []);
-        S.callPeers = (r && r.peers || []).filter(function (x) { return x.id !== S.uid; });
-        if (JSON.stringify(S.callPeers) !== prev) callBannerUpdate();
-      } catch (e) { }
-    }, 4000);
+    idleTimer = setInterval(callIdleOnce, 4000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) callIdleOnce(); });
+    callIdleOnce();
   }
   function callSignal(to, kind, obj) { return API.rpc('call_signal', { p_to: to, p_kind: kind, p_payload: JSON.stringify(obj) }).catch(function () { }); }
   function callPc(id) {
@@ -2003,10 +2012,17 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   async function callStart(video) {
     if (CALL) return;
     if (!navigator.mediaDevices || !window.RTCPeerConnection) { toast('Этот браузер не поддерживает звонки.', true); return; }
-    var stream;
+    var stream, vOk = !!video;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: video ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false }); }
-    catch (e) { toast(video ? 'Разрешите камеру и микрофон в настройках Safari.' : 'Разрешите микрофон в настройках Safari.', true); return; }
+    catch (e) {
+      if (video) {
+        try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); vOk = false; toast('Камера недоступна. Входим только со звуком.', true); } catch (e2) { e = e2; }
+      }
+      if (!stream) { toast((e && e.name === 'NotAllowedError') ? 'Доступ к микрофону запрещён. Разрешите его: Настройки → Safari → Микрофон.' : 'Микрофон не найден или занят (' + (e && e.name) + ').', true); return; }
+    }
+    video = vOk;
     CALL = { pcs: {}, queue: {}, remote: {}, state: {}, stream: stream, video: !!video, after: 0, peers: [], muted: false, camOff: false, fails: 0, busy: false, t0: Date.now() };
+    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { CALL.wl = w; }).catch(function () { }); } catch (e) { }
     callOpenUi(); callDraw();
     try {
       var r = await API.rpcGet('call_join', { p_video: !!video });
@@ -2021,6 +2037,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     if (!CALL) return;
     var c0 = CALL; CALL = null;
     clearInterval(c0.timer);
+    try { if (c0.wl) c0.wl.release(); } catch (e) { }
     Object.keys(c0.pcs).forEach(function (k) { try { c0.pcs[k].close(); } catch (e) { } });
     c0.stream.getTracks().forEach(function (t) { t.stop(); });
     if (!skipLeave) API.rpc('call_leave', {}).catch(function () { });
@@ -2030,7 +2047,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   }
   function callOpenUi() {
     var el = document.createElement('div'); el.id = 'callov'; el.className = 'callov';
-    el.innerHTML = '<div class="call-grid" id="call-grid"></div><div class="call-bar" id="call-bar"></div>';
+    el.innerHTML = '<div class="call-grid" id="call-grid"></div><div class="call-hint" id="call-hint"></div><div class="call-bar" id="call-bar"></div>';
     document.body.appendChild(el);
   }
   function callTile(key, name, stream, showVideo, mine, status) {
@@ -2052,6 +2069,8 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       var v = g.querySelector('[data-k="' + t.key + '"] video');
       if (v && t.stream && v.srcObject !== t.stream) { v.srcObject = t.stream; var pp = v.play(); if (pp && pp.catch) pp.catch(function () { }); }
     });
+    var hint = document.getElementById('call-hint');
+    if (hint) hint.textContent = CALL.peers.length ? '' : 'Ждём друзей. Им отправлено уведомление, они увидят кнопку входа.';
     var b = document.getElementById('call-bar');
     if (b && CALL.barSig !== (CALL.muted + '' + CALL.camOff + CALL.video)) {
       CALL.barSig = CALL.muted + '' + CALL.camOff + CALL.video;
@@ -2503,6 +2522,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     S.enter = false;
     tickCountdown();
     if (S.phase !== 'app' || !S.data) return;
+    callIdlePoll();
     try { var c0 = derive(); if (c0.me && c0.d.settings.setup_done && !S.modal) checkNewAch(c0); } catch (e0) { }
     if (S.tab === 'chat') {
       if (wasEnter || S.chatToEnd) { scrollChatEnd(); S.chatToEnd = false; }
