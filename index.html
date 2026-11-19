@@ -835,6 +835,9 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 .cb.off { background: #fff; color: #120a30; }
 .cb.end { background: #e11d48; color: #fff; }
 .cb.end svg { transform: rotate(135deg); }
+.chat-top { position: sticky; top: 0; z-index: 8; margin: 0 -4px; padding: env(safe-area-inset-top) 4px 2px; background: rgba(238,233,252,.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
+.chat-top h2 { margin: 6px 0; }
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
@@ -1718,8 +1721,8 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
   }
   function viewChat(c) {
     callIdlePoll();
-    return '<div class="chat-head"><h2>Общий чат</h2><span class="chat-calls"><button type="button" class="callbtn" data-act="call-audio" aria-label="Позвонить">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Видеозвонок">' + icon('video', 22) + '</button></span></div>' +
-      '<div id="callbn">' + callBannerHtml() + '</div><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
+    return '<div class="chat-top"><div class="chat-head"><h2>Общий чат</h2><span class="chat-calls"><button type="button" class="callbtn" data-act="call-audio" aria-label="Позвонить">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Видеозвонок">' + icon('video', 22) + '</button></span></div>' +
+      '<div id="callbn">' + callBannerHtml() + '</div></div><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
       '<form data-form="chat" class="composer" autocomplete="off">' +
       '<div class="mchips">' + c.profiles.filter(function (p) { return p.id !== c.me.id; }).map(function (p) { return '<button type="button" data-act="mention" data-n="' + esc(firstName(p)) + '">@' + esc(firstName(p)) + '</button>'; }).join('') + '</div>' +
       (S.stkOpen ? '<div class="gifpanel"><input id="gif-q" type="search" placeholder="Поиск GIF…" autocomplete="off"><div class="gifgrid" id="gif-grid">' + gifGridHtml(S.gifs) + '</div><div class="muted small" style="text-align:center;padding:4px">Powered by GIPHY</div></div>' : '') +
