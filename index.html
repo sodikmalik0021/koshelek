@@ -814,6 +814,27 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 .gifgrid button { border: 0; padding: 0; background: rgba(124,58,237,.08); border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: none !important; min-height: 70px; }
 .gifgrid img { width: 100%; display: block; }
 .gifmsg { display: block; width: 200px; max-width: 100%; border-radius: 16px; }
+.stkbtn { font-weight: 700; font-size: 13px; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.chat-calls { display: flex; gap: 8px; }
+.callbtn { width: 42px; height: 42px; border-radius: 50%; border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(124,58,237,.12); color: #6d3ae8; box-shadow: none !important; -webkit-tap-highlight-color: transparent; }
+.callbn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin: 8px 0; border-radius: 18px; background: linear-gradient(135deg, #16a34a, #0d9488); color: #fff; }
+.callbn > div { flex: 1; }
+.callbn .muted { color: rgba(255,255,255,.85); }
+.callbn .callbtn { background: rgba(255,255,255,.22); color: #fff; }
+.callov { position: fixed; inset: 0; z-index: 160; background: #120a30; display: flex; flex-direction: column; padding: env(safe-area-inset-top) 10px calc(env(safe-area-inset-bottom) + 10px); }
+.call-grid { flex: 1; display: grid; gap: 8px; padding: 10px 0; min-height: 0; grid-template-columns: 1fr; grid-auto-rows: 1fr; }
+.call-grid.n3, .call-grid.n4 { grid-template-columns: 1fr 1fr; }
+.call-tile { position: relative; border-radius: 20px; overflow: hidden; background: #241a55; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.call-tile video { width: 100%; height: 100%; object-fit: cover; }
+.call-tile video.mir { transform: scaleX(-1); }
+.call-ava { width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #ec4899); color: #fff; font-size: 36px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.call-name { position: absolute; left: 10px; bottom: 8px; padding: 3px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: 13px; }
+.call-bar { display: flex; justify-content: center; gap: 18px; padding: 8px 0; }
+.cb { width: 62px; height: 62px; border-radius: 50%; border: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.16); color: #fff; cursor: pointer; box-shadow: none !important; }
+.cb.off { background: #fff; color: #120a30; }
+.cb.end { background: #e11d48; color: #fff; }
+.cb.end svg { transform: rotate(135deg); }
 </style>
 <div id="splash" aria-live="polite">
   <div class="sp-glow"></div>
@@ -1677,7 +1698,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
       var mine = m.member_id === c.me.id;
       var cont = prev && prev.member_id === m.member_id && (new Date(m.created_at) - new Date(prev.created_at)) < 5 * 60000;
       var canDel = !m.deleted && (mine || isMain);
-      var isStk = !m.deleted && /^§st:[a-z]+$/.test(m.body || '') && stickerHtml(m.body.slice(4));
+      var isStk = !m.deleted && /^§st:[a-z]+$/.test(m.body || '') && '<span class="muted">Стикер</span>';
       var gm = !m.deleted && /^§gif:[A-Za-z0-9]+$/.exec(m.body || '');
       if (gm) isStk = '<img class="gifmsg" loading="lazy" alt="GIF" src="https://media.giphy.com/media/' + gm[0].slice(5) + '/200w.gif">';
       var body = m.deleted ? '<span class="gone">Сообщение удалено</span>' : (isStk || mentionHtml(m.body));
@@ -1696,13 +1717,13 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     return h;
   }
   function viewChat(c) {
-    return '<h2>Общий чат</h2><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
+    callIdlePoll();
+    return '<div class="chat-head"><h2>Общий чат</h2><span class="chat-calls"><button type="button" class="callbtn" data-act="call-audio" aria-label="Позвонить">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Видеозвонок">' + icon('video', 22) + '</button></span></div>' +
+      '<div id="callbn">' + callBannerHtml() + '</div><div class="chat" id="chat-list">' + chatListHtml(c) + '</div>' +
       '<form data-form="chat" class="composer" autocomplete="off">' +
       '<div class="mchips">' + c.profiles.filter(function (p) { return p.id !== c.me.id; }).map(function (p) { return '<button type="button" data-act="mention" data-n="' + esc(firstName(p)) + '">@' + esc(firstName(p)) + '</button>'; }).join('') + '</div>' +
-      (S.stkOpen ? '<div class="stktabs"><button type="button" data-act="stk-tab" data-v="st" class="' + (S.stkTab !== 'gif' ? 'on' : '') + '">Стикеры</button><button type="button" data-act="stk-tab" data-v="gif" class="' + (S.stkTab === 'gif' ? 'on' : '') + '">GIF</button></div>' : '') +
-      (S.stkOpen && S.stkTab === 'gif' ? '<div class="gifpanel"><input id="gif-q" type="search" placeholder="Поиск GIF…" autocomplete="off"><div class="gifgrid" id="gif-grid">' + gifGridHtml(S.gifs) + '</div><div class="muted small" style="text-align:center;padding:4px">Powered by GIPHY</div></div>' : '') +
-      (S.stkOpen && S.stkTab !== 'gif' ? '<div class="stkpanel">' + STICKERS.map(function (q) { return '<button type="button" data-act="stk-send" data-k="' + q[0] + '" aria-label="' + q[1] + '">' + stickerHtml(q[0]) + '</button>'; }).join('') + '</div>' : '') +
-      '<button type="button" class="stkbtn" data-act="stk-toggle" aria-label="Стикеры">' + icon('smile', 24) + '</button>' +
+      (S.stkOpen ? '<div class="gifpanel"><input id="gif-q" type="search" placeholder="Поиск GIF…" autocomplete="off"><div class="gifgrid" id="gif-grid">' + gifGridHtml(S.gifs) + '</div><div class="muted small" style="text-align:center;padding:4px">Powered by GIPHY</div></div>' : '') +
+      '<button type="button" class="stkbtn" data-act="stk-toggle" aria-label="GIF">GIF</button>' +
       '<input id="chat-input" type="text" maxlength="1000" placeholder="Сообщение…" enterkeyhint="send" autocomplete="off" aria-label="Сообщение">' +
       '<button type="submit" class="send" aria-label="Отправить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg></button></form>';
   }
@@ -1895,6 +1916,148 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
     }
     return '';
   }
+  // ----- групповой звонок (WebRTC, каждый с каждым)
+  IC_PATHS.phone = '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>';
+  IC_PATHS.video = '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10l5-3v10l-5-3z"/>';
+  IC_PATHS.mic = '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>';
+  IC_PATHS.micoff = '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"/>';
+  IC_PATHS.videooff = '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10l5-3v10l-5-3zM4 4l16 16"/>';
+  var CALL = null;
+  var ICE_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
+  function callBannerHtml() {
+    var p = S.callPeers || [];
+    if (CALL || !p.length) return '';
+    return '<div class="callbn"><div><b>Идёт звонок</b><div class="muted small">' + p.map(function (x) { return esc(String(x.name).split(' ')[0]); }).join(', ') + '</div></div>' +
+      '<button type="button" class="callbtn" data-act="call-audio" aria-label="Войти со звуком">' + icon('phone', 22) + '</button><button type="button" class="callbtn" data-act="call-video" aria-label="Войти с видео">' + icon('video', 22) + '</button></div>';
+  }
+  function callBannerUpdate() { var el = document.getElementById('callbn'); if (el) el.innerHTML = callBannerHtml(); }
+  var idleTimer = null;
+  function callIdlePoll() {
+    if (idleTimer) return;
+    idleTimer = setInterval(async function () {
+      if (CALL || S.phase !== 'app' || S.tab !== 'chat' || document.hidden) return;
+      try {
+        var r = await API.rpcGet('call_poll', { p_after: 0 });
+        var prev = JSON.stringify(S.callPeers || []);
+        S.callPeers = (r && r.peers || []).filter(function (x) { return x.id !== S.uid; });
+        if (JSON.stringify(S.callPeers) !== prev) callBannerUpdate();
+      } catch (e) { }
+    }, 4000);
+  }
+  function callSignal(to, kind, obj) { return API.rpc('call_signal', { p_to: to, p_kind: kind, p_payload: JSON.stringify(obj) }).catch(function () { }); }
+  function callPc(id) {
+    if (CALL.pcs[id]) { try { CALL.pcs[id].close(); } catch (e) { } }
+    var pc = new RTCPeerConnection(ICE_CFG);
+    CALL.pcs[id] = pc; CALL.queue[id] = [];
+    CALL.stream.getTracks().forEach(function (t) { pc.addTrack(t, CALL.stream); });
+    pc.onicecandidate = function (e) { if (e.candidate) callSignal(id, 'ice', e.candidate); };
+    pc.ontrack = function (e) { CALL.remote[id] = e.streams[0]; callDraw(); };
+    pc.onconnectionstatechange = function () { if (pc.connectionState === 'connected') { CALL.state[id] = 'ok'; callDraw(); } };
+    return pc;
+  }
+  async function callOffer(id) {
+    var pc = callPc(id);
+    var o = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+    await pc.setLocalDescription(o);
+    await callSignal(id, 'offer', pc.localDescription);
+  }
+  async function callFlush(id) {
+    var pc = CALL.pcs[id], q = CALL.queue[id] || [];
+    CALL.queue[id] = [];
+    for (var i = 0; i < q.length; i++) { try { await pc.addIceCandidate(q[i]); } catch (e) { } }
+  }
+  async function callHandle(sg) {
+    var id = sg.from, d; try { d = JSON.parse(sg.payload); } catch (e) { return; }
+    if (sg.kind === 'offer') {
+      var pc = callPc(id);
+      await pc.setRemoteDescription(d);
+      await callFlush(id);
+      var a = await pc.createAnswer(); await pc.setLocalDescription(a);
+      await callSignal(id, 'answer', pc.localDescription);
+    } else if (sg.kind === 'answer') {
+      var p2 = CALL.pcs[id]; if (p2 && p2.signalingState === 'have-local-offer') { await p2.setRemoteDescription(d); await callFlush(id); }
+    } else if (sg.kind === 'ice') {
+      var p3 = CALL.pcs[id]; if (!p3) return;
+      if (p3.remoteDescription) { try { await p3.addIceCandidate(d); } catch (e) { } } else CALL.queue[id].push(d);
+    }
+  }
+  async function callPoll() {
+    if (!CALL || CALL.busy) return; CALL.busy = true;
+    try {
+      var r = await API.rpcGet('call_poll', { p_after: CALL.after });
+      CALL.fails = 0;
+      if (!r.me_in) { callEnd(true); return; }
+      var sigs = r.signals || [];
+      for (var i = 0; i < sigs.length; i++) { CALL.after = Math.max(CALL.after, sigs[i].id); await callHandle(sigs[i]); }
+      var ids = {};
+      CALL.peers = (r.peers || []).filter(function (x) { return x.id !== S.uid; });
+      CALL.peers.forEach(function (x) { ids[x.id] = 1; });
+      Object.keys(CALL.pcs).forEach(function (k) { if (!ids[k]) { try { CALL.pcs[k].close(); } catch (e) { } delete CALL.pcs[k]; delete CALL.remote[k]; } });
+      callDraw();
+    } catch (e) { if (++CALL.fails >= 8) { toast('Связь пропала. Звонок завершён.', true); callEnd(false); return; } }
+    if (CALL) CALL.busy = false;
+  }
+  async function callStart(video) {
+    if (CALL) return;
+    if (!navigator.mediaDevices || !window.RTCPeerConnection) { toast('Этот браузер не поддерживает звонки.', true); return; }
+    var stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: video ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false }); }
+    catch (e) { toast(video ? 'Разрешите камеру и микрофон в настройках Safari.' : 'Разрешите микрофон в настройках Safari.', true); return; }
+    CALL = { pcs: {}, queue: {}, remote: {}, state: {}, stream: stream, video: !!video, after: 0, peers: [], muted: false, camOff: false, fails: 0, busy: false, t0: Date.now() };
+    callOpenUi(); callDraw();
+    try {
+      var r = await API.rpcGet('call_join', { p_video: !!video });
+      CALL.after = r.last || 0;
+      CALL.peers = r.peers || [];
+      callDraw();
+      for (var i = 0; i < CALL.peers.length; i++) await callOffer(CALL.peers[i].id);
+    } catch (e) { toast('Не удалось начать звонок.', true); callEnd(false); return; }
+    CALL.timer = setInterval(callPoll, 1000);
+  }
+  function callEnd(skipLeave) {
+    if (!CALL) return;
+    var c0 = CALL; CALL = null;
+    clearInterval(c0.timer);
+    Object.keys(c0.pcs).forEach(function (k) { try { c0.pcs[k].close(); } catch (e) { } });
+    c0.stream.getTracks().forEach(function (t) { t.stop(); });
+    if (!skipLeave) API.rpc('call_leave', {}).catch(function () { });
+    var el = document.getElementById('callov'); if (el) el.remove();
+    S.callPeers = [];
+    if (S.phase === 'app' && S.tab === 'chat') callBannerUpdate();
+  }
+  function callOpenUi() {
+    var el = document.createElement('div'); el.id = 'callov'; el.className = 'callov';
+    el.innerHTML = '<div class="call-grid" id="call-grid"></div><div class="call-bar" id="call-bar"></div>';
+    document.body.appendChild(el);
+  }
+  function callTile(key, name, stream, showVideo, mine, status) {
+    return '<div class="call-tile" data-k="' + key + '">' + (showVideo ? '<video playsinline autoplay ' + (mine ? 'muted class="mir"' : '') + '></video>' : '<video playsinline autoplay ' + (mine ? 'muted' : '') + ' style="display:none"></video><div class="call-ava">' + esc(String(name).charAt(0).toUpperCase()) + '</div>') +
+      '<span class="call-name">' + esc(mine ? 'Вы' : String(name).split(' ')[0]) + (status ? ' · ' + status : '') + '</span></div>';
+  }
+  function callDraw() {
+    var g = document.getElementById('call-grid'); if (!g || !CALL) return;
+    var c = null; try { c = derive(); } catch (e) { }
+    var tiles = [{ key: 'me', name: c && c.me ? c.me.full_name : 'Я', stream: CALL.stream, v: CALL.video && !CALL.camOff, mine: true }];
+    CALL.peers.forEach(function (p) { tiles.push({ key: p.id, name: p.name, stream: CALL.remote[p.id], v: p.video, mine: false, st: CALL.state[p.id] === 'ok' ? '' : 'соединяем…' }); });
+    var sig = JSON.stringify(tiles.map(function (t) { return [t.key, t.v, t.st || '', !!t.stream]; }));
+    if (CALL.sig !== sig) {
+      CALL.sig = sig;
+      g.className = 'call-grid n' + Math.min(tiles.length, 4);
+      g.innerHTML = tiles.map(function (t) { return callTile(t.key, t.name, t.stream, t.v, t.mine, t.st); }).join('');
+    }
+    tiles.forEach(function (t) {
+      var v = g.querySelector('[data-k="' + t.key + '"] video');
+      if (v && t.stream && v.srcObject !== t.stream) { v.srcObject = t.stream; var pp = v.play(); if (pp && pp.catch) pp.catch(function () { }); }
+    });
+    var b = document.getElementById('call-bar');
+    if (b && CALL.barSig !== (CALL.muted + '' + CALL.camOff + CALL.video)) {
+      CALL.barSig = CALL.muted + '' + CALL.camOff + CALL.video;
+      b.innerHTML = '<button type="button" data-act="call-mute" class="cb' + (CALL.muted ? ' off' : '') + '" aria-label="Микрофон">' + icon(CALL.muted ? 'micoff' : 'mic', 26) + '</button>' +
+        (CALL.video ? '<button type="button" data-act="call-cam" class="cb' + (CALL.camOff ? ' off' : '') + '" aria-label="Камера">' + icon(CALL.camOff ? 'videooff' : 'video', 26) + '</button>' : '') +
+        '<button type="button" data-act="call-end" class="cb end" aria-label="Завершить">' + icon('phone', 26) + '</button>';
+    }
+  }
+
   var medalUid = 0;
   function icon(name, size) {
     return '<svg class="ic-l" viewBox="0 0 24 24" width="' + (size || 20) + '" height="' + (size || 20) + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC_PATHS[name] || '') + '</svg>';
@@ -2610,7 +2773,12 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
         if (achQueue.length) { var nx = achQueue.shift(); showAch(nx, true); }
         break;
       }
-      case 'stk-toggle': S.stkOpen = !S.stkOpen; render(); break;
+      case 'stk-toggle': S.stkOpen = !S.stkOpen; if (S.stkOpen && !S.gifs) gifLoad(''); render(); break;
+      case 'call-audio': callStart(false); break;
+      case 'call-video': callStart(true); break;
+      case 'call-end': callEnd(false); break;
+      case 'call-mute': if (CALL) { CALL.muted = !CALL.muted; CALL.stream.getAudioTracks().forEach(function (x) { x.enabled = !CALL.muted; }); callDraw(); } break;
+      case 'call-cam': if (CALL) { CALL.camOff = !CALL.camOff; CALL.stream.getVideoTracks().forEach(function (x) { x.enabled = !CALL.camOff; }); CALL.sig = null; callDraw(); } break;
       case 'stk-tab': S.stkTab = t.getAttribute('data-v'); if (S.stkTab === 'gif' && !S.gifs) gifLoad(''); render(); break;
       case 'gif-send': {
         var gk = t.getAttribute('data-k'); S.stkOpen = false;
