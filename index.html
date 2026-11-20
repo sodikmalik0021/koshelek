@@ -549,6 +549,14 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .fx .fxf b.cur{margin-left:auto;color:var(--violet)}
 .fx .fxswap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;margin:0;padding:0;z-index:1;border:0;border-radius:50%;background:var(--violet);color:#fff;font-size:18px;cursor:pointer}
 .fx .fxnote{font-size:12px;color:var(--ink-soft)}
+.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
+.subtile{background:var(--paper);border:0;border-radius:20px;padding:14px;box-shadow:0 10px 24px -12px rgba(91,43,217,.38);display:flex;flex-direction:column;gap:6px;min-height:118px;text-align:left;cursor:pointer;color:var(--ink);font-family:inherit;transition:transform .15s}
+.subtile:active{transform:scale(.97)}
+.subtile b{font-size:15px;font-weight:700}.subtile span:last-child{font-size:12.5px;color:var(--ink-soft)}
+.subsp{flex:1}.subic{width:40px;height:40px;border-radius:13px;display:grid;place-items:center}
+.subic svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.subhd{display:flex;align-items:center;gap:10px;margin:4px 0 12px}.subhd h2{margin:0}
+.subback{width:42px;height:42px;border-radius:50%;border:0;background:var(--paper);box-shadow:0 6px 16px -8px rgba(91,43,217,.4);font-size:22px;color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:0}
 .chart .gl { stroke: var(--violet); stroke-opacity: .35; stroke-dasharray: 3 3; }
 .ach { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
 .ach > div { text-align: center; font-size: 11.5px; line-height: 1.2; color: var(--ink); }
@@ -1419,7 +1427,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     phase: 'boot', uid: null, data: null, tab: 'home', hist: 'tx', payMember: null, reportMonth: null,
     modal: null, live: true, busy: false, drafts: {}, showAllPayments: false, loginError: '', bootError: '',
     loginTab: 'login', hasAdmin: true, pendingMe: null, lastJson: '',
-    chat: { version: '', messages: [], sending: false }, chatToEnd: false, enter: true, shownBal: null, cdRolled: false
+    sub: null, chat: { version: '', messages: [], sending: false }, chatToEnd: false, enter: true, shownBal: null, cdRolled: false
   };
   var IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var IS_STANDALONE = window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
@@ -1828,8 +1836,89 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       : '<button class="tile" data-act="tab" data-tab="history"><b>' + icon('chart', 22) + '</b><small>История и отчёты</small></button>';
     return '<div class="tiles">' + t1 + t2 + '</div>';
   }
+  function dlHtml(c) {
+    var s = c.d.settings, h = '';
+    var rem = CW.reminders({
+      me: c.me, settings: s, today: c.today, summaries: c.summaries, profilesById: c.byId,
+      contributions: c.d.contributions, expenses: c.d.expenses, votes: c.d.votes
+    });
+    var m = c.summaries[c.me.id];
+    rem = rem.filter(function (r) { return r.kind !== 'deadline'; });
+    rem = rem.filter(function (r) { return r.level !== 'action'; });
+    h += '<h2>Сроки</h2>' + countdownCard(m) + rem.map(function (r) {
+      return '<button class="msg ' + r.level + '" data-act="tab" data-tab="' + r.tab + '">' + esc(r.text) + '</button>';
+    }).join('');
+
+    return h;
+  }
+  function weekHtml(c) {
+    var s = c.d.settings, h = '', m = c.summaries[c.me.id];
+    if (m) {
+      var pct = Math.min(100, Math.round(m.current.paid / s.weekly_amount * 100));
+      h += '<h2>Ваша неделя</h2><div class="panel">' +
+        '<div class="row"><div><div class="muted small">Срок оплаты</div><div><b>' + CW.prettyDate(m.nextDeadline, true) + '</b></div></div>' +
+        '<div style="text-align:right"><div class="muted small">Оплачено за неделю</div><div class="num"><b>' + money(Math.min(m.current.paid, s.weekly_amount)) + '</b> из ' + money(s.weekly_amount) + '</div></div></div>' +
+        '<div class="bar" style="margin-top:10px"><i class="' + (pct >= 100 ? 'full' : '') + '" style="width:' + pct + '%"></i></div>';
+      if (m.debt > 0) h += '<p class="bad-text" style="margin-top:10px">Просрочено: ' + money(m.debt) + ' (' + m.missedWeeks + ' ' + CW.plural(m.missedWeeks, 'неделя', 'недели', 'недель') + ')</p>';
+      else if (m.current.remaining === 0) h += '<p class="good-text" style="margin-top:10px">Всё оплачено. Спасибо!</p>';
+      if (m.creditAhead > 0) h += '<p class="muted small" style="margin-top:6px">Оплачено вперёд: ' + money(m.creditAhead) + '</p>';
+      h += '</div>';
+    }
+
+    return h;
+  }
+  function usHtml(c) {
+    var s = c.d.settings, h = '';
+    h += '<div class="panel tight list">' + c.profiles.map(function (p) {
+      var x = c.summaries[p.id], line;
+      if (x.debt > 0) line = '<span class="bad-text">Долг ' + money(x.debt) + '</span><div class="muted small">' + x.missedWeeks + ' ' + CW.plural(x.missedWeeks, 'пропущенная неделя', 'пропущенные недели', 'пропущенных недель') + '</div>';
+      else if (x.current.remaining === 0) line = '<span class="good-text">Эта неделя оплачена</span>';
+      else line = '<span>Осталось: ' + money(x.current.remaining) + '</span>';
+      var wp = Math.min(100, Math.round(Math.min(x.current.paid, s.weekly_amount) / s.weekly_amount * 100));
+      return '<div class="item member tap" data-act="memhist" data-id="' + esc(p.id) + '" role="button">' + ava(c, p.id) + '<div class="grow"><div class="row top"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · всего ' + money(x.totalApproved) + '</div></div>' +
+        '<div style="text-align:right" class="small">' + line + '</div></div>' +
+        '<div class="bar thin"><i class="' + (wp >= 100 ? 'full' : '') + '" style="width:' + wp + '%"></i></div></div></div>';
+    }).join('') + '</div>';
+    return h;
+  }
+  var SUBS = {
+    dl: ['Сроки', '#ec4899', '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>'],
+    fx: ['Курс валют', '#7c3aed', '<svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>'],
+    us: ['Участники', '#4a22b5', '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4 1.4 4.5 4"/></svg>'],
+    go: ['Цель и баланс', '#e0a93b', '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>'],
+    ac: ['Достижения', '#1c9a5b', '<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v2a3 3 0 0 0 4 2.8M16 6h4v2a3 3 0 0 1-4 2.8"/><path d="M12 13v4M8 20h8"/></svg>'],
+    fe: ['Лента', '#2a1273', '<svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg>']
+  };
+  function tileHint(k, c) {
+    var s = c.d.settings, m = c.summaries[c.me.id];
+    try {
+      if (k === 'dl') return m ? 'до ' + CW.prettyDate(m.nextDeadline, false) : 'Сроки оплаты';
+      if (k === 'fx') { var r = FX.data.USD; return r && r.length ? '1 $ = ' + fxFmt(r[r.length - 1].v, 2) + ' сом' : 'НБКР'; }
+      if (k === 'us') { var n = c.profiles.length, ok = c.profiles.filter(function (p) { return c.summaries[p.id].current.remaining === 0; }).length; return ok + ' из ' + n + ' оплатили'; }
+      if (k === 'go') { var g = c.d.goal; return g && g.target ? Math.min(100, Math.round(c.bal.confirmed / g.target * 100)) + '% до цели' : 'Баланс и цель'; }
+      if (k === 'ac') { var l = achList(c); return l.filter(Boolean).length + ' из ' + l.length + ' открыто'; }
+    } catch (e) { }
+    return 'Последние события';
+  }
+  function tilesHtml(c) {
+    fxLoad('USD');
+    return '<div class="subgrid">' + Object.keys(SUBS).map(function (k) {
+      return '<button class="subtile" data-act="sub" data-id="' + k + '"><span class="subic" style="background:' + SUBS[k][1] + '">' + SUBS[k][2] + '</span><span class="subsp"></span><b>' + SUBS[k][0] + '</b><span>' + esc(tileHint(k, c)) + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function subPage(c) {
+    var k = S.sub, h = '<div class="subhd"><button class="subback" data-act="sub" data-id="" aria-label="Назад">‹</button><h2>' + SUBS[k][0] + '</h2></div>';
+    if (k === 'dl') h += dlHtml(c);
+    else if (k === 'fx') h += fxHtml();
+    else if (k === 'us') h += usHtml(c);
+    else if (k === 'go') h += statTiles(c) + goalHtml(c) + chartHtml(c);
+    else if (k === 'ac') h += flamesHtml(c) + achHtml(c);
+    else h += feedHtml(c);
+    return h;
+  }
   function viewHome(c) {
     var s = c.d.settings, h = '';
+    if (S.sub && s.setup_done) return subPage(c);
     var names = c.profiles.map(function (p) { return esc(p.full_name.split(' ')[0]); }).join(' · ');
     h += '<div class="simcard"><div class="top"><span class="logo">S7</span><span class="bank">SIMBANK</span></div>' +
       '<div><div class="lbl">на карте</div><div class="bal num">' + money(c.bal.confirmed) + '</div></div>' +
@@ -1839,7 +1928,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     if (c.bal.approvedNotPaid > 0) h += '<span class="note-chip">Одобрено, ещё не оплачено: <b>' + money(c.bal.approvedNotPaid) + '</b></span>';
     h += '</div>';
     if (s.setup_done) {
-      h += pushBanner() + statTiles(c) + inboxHtml(c);
+      h += pushBanner() + inboxHtml(c);
       var mm = c.summaries[c.me.id], due = mm ? mm.toPayNow : 0;
       h += '<button class="cta-big" data-act="tab" data-tab="payments">＋ Внести ' + (due > 0 ? money(due) : '') + '</button>';
     }
@@ -1859,46 +1948,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       return h;
     }
 
-    var rem = CW.reminders({
-      me: c.me, settings: s, today: c.today, summaries: c.summaries, profilesById: c.byId,
-      contributions: c.d.contributions, expenses: c.d.expenses, votes: c.d.votes
-    });
-    var m = c.summaries[c.me.id];
-    rem = rem.filter(function (r) { return r.kind !== 'deadline'; });
-    rem = rem.filter(function (r) { return r.level !== 'action'; });
-    h += '<h2>Сроки</h2>' + countdownCard(m) + rem.map(function (r) {
-      return '<button class="msg ' + r.level + '" data-act="tab" data-tab="' + r.tab + '">' + esc(r.text) + '</button>';
-    }).join('');
-
-    if (m) {
-      var pct = Math.min(100, Math.round(m.current.paid / s.weekly_amount * 100));
-      h += '<h2>Ваша неделя</h2><div class="panel">' +
-        '<div class="row"><div><div class="muted small">Срок оплаты</div><div><b>' + CW.prettyDate(m.nextDeadline, true) + '</b></div></div>' +
-        '<div style="text-align:right"><div class="muted small">Оплачено за неделю</div><div class="num"><b>' + money(Math.min(m.current.paid, s.weekly_amount)) + '</b> из ' + money(s.weekly_amount) + '</div></div></div>' +
-        '<div class="bar" style="margin-top:10px"><i class="' + (pct >= 100 ? 'full' : '') + '" style="width:' + pct + '%"></i></div>';
-      if (m.debt > 0) h += '<p class="bad-text" style="margin-top:10px">Просрочено: ' + money(m.debt) + ' (' + m.missedWeeks + ' ' + CW.plural(m.missedWeeks, 'неделя', 'недели', 'недель') + ')</p>';
-      else if (m.current.remaining === 0) h += '<p class="good-text" style="margin-top:10px">Всё оплачено. Спасибо!</p>';
-      if (m.creditAhead > 0) h += '<p class="muted small" style="margin-top:6px">Оплачено вперёд: ' + money(m.creditAhead) + '</p>';
-      h += '</div>';
-    }
-
-    h += fxHtml();
-    h += goalHtml(c);
-    h += flamesHtml(c);
-    h += achHtml(c);
-    h += chartHtml(c);
-    h += '<h2>Все участники</h2><div class="panel tight list">' + c.profiles.map(function (p) {
-      var x = c.summaries[p.id], line;
-      if (x.debt > 0) line = '<span class="bad-text">Долг ' + money(x.debt) + '</span><div class="muted small">' + x.missedWeeks + ' ' + CW.plural(x.missedWeeks, 'пропущенная неделя', 'пропущенные недели', 'пропущенных недель') + '</div>';
-      else if (x.current.remaining === 0) line = '<span class="good-text">Эта неделя оплачена</span>';
-      else line = '<span>Осталось: ' + money(x.current.remaining) + '</span>';
-      var wp = Math.min(100, Math.round(Math.min(x.current.paid, s.weekly_amount) / s.weekly_amount * 100));
-      return '<div class="item member tap" data-act="memhist" data-id="' + esc(p.id) + '" role="button">' + ava(c, p.id) + '<div class="grow"><div class="row top"><div><b>' + esc(p.full_name) + '</b><div class="role">' + ROLE_NAME[p.role] + ' · всего ' + money(x.totalApproved) + '</div></div>' +
-        '<div style="text-align:right" class="small">' + line + '</div></div>' +
-        '<div class="bar thin"><i class="' + (wp >= 100 ? 'full' : '') + '" style="width:' + wp + '%"></i></div></div></div>';
-    }).join('') + '</div>';
-    h += feedHtml(c);
-    return h;
+    return h + weekHtml(c) + tilesHtml(c);
   }
 
   // ----- собственные иконки и медали (вместо эмодзи)
@@ -2825,12 +2875,13 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
     switch (act) {
       case 'reload': location.reload(); break;
+      case 'sub': S.sub = id || null; window.scrollTo(0, 0); render(); break;
       case 'fxc': FX.code = id; render(); break;
       case 'fxp': FX.pi = parseInt(id, 10); render(); break;
       case 'fxswap': FX.mode = FX.mode === 'kgs' ? 'usd' : 'kgs'; S.drafts['fx-amt'] = undefined; render(); break;
       case 'tab': {
         var nt = t.getAttribute('data-tab');
-        if (nt !== S.tab) { S.tab = nt; S.enter = true; window.scrollTo(0, 0); render(); }
+        if (nt !== S.tab) { S.sub = null; S.tab = nt; S.enter = true; window.scrollTo(0, 0); render(); }
         else window.scrollTo({ top: nt === 'chat' ? document.documentElement.scrollHeight : 0, behavior: 'smooth' });
         if (nt === 'chat') loadChat();
         break;

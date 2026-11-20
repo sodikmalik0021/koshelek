@@ -4,7 +4,7 @@
  * Always tries the network first, so updates arrive right away.
  * Wallet data (Supabase) is never cached here.
  */
-var CACHE = 'koshelek-v19';
+var CACHE = 'koshelek-v20';
 var FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
