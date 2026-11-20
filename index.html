@@ -549,6 +549,8 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .fx .fxf b.cur{margin-left:auto;color:var(--violet)}
 .fx .fxswap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;margin:0;padding:0;z-index:1;border:0;border-radius:50%;background:var(--violet);color:#fff;font-size:18px;cursor:pointer}
 .fx .fxnote{font-size:12px;color:var(--ink-soft)}
+.simcard .ppbrand{display:flex;align-items:center;gap:10px}.simcard .ppbrand b{font-size:22px;font-weight:800;letter-spacing:.04em;color:#fff}
+.simcard .pplogo{width:40px;height:40px;border-radius:11px;display:block;box-shadow:0 4px 12px rgba(20,8,70,.35)}
 .simcard .usd{font-size:15px;font-weight:700;margin-top:2px;opacity:.95}.simcard .usd small{font-weight:500;opacity:.75;font-size:12px}
 .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
 .subtile{background:var(--paper);border:0;border-radius:20px;padding:14px;box-shadow:0 10px 24px -12px rgba(91,43,217,.38);display:flex;flex-direction:column;gap:6px;min-height:118px;text-align:left;cursor:pointer;color:var(--ink);font-family:inherit;transition:transform .15s}
@@ -1905,7 +1907,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     fxLoad('USD');
     var r = FX.data.USD; if (!r || !r.length) return '';
     var rate = Number(r[r.length - 1].v); if (!(rate > 0)) return '';
-    return '<div class="usd num">≈ $' + fxFmt(c.bal.confirmed / rate, 2) + ' <small>по курсу ' + fxFmt(rate, 2) + '</small></div>';
+    return '<div class="usd num">≈ $' + fxFmt(c.bal.confirmed / rate, 2) + '</div>';
   }
   function tilesHtml(c) {
     fxLoad('USD');
@@ -1927,9 +1929,8 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var s = c.d.settings, h = '';
     if (S.sub && s.setup_done) return subPage(c);
     var names = c.profiles.map(function (p) { return esc(p.full_name.split(' ')[0]); }).join(' · ');
-    h += '<div class="simcard"><div class="top"><span class="logo">S7</span><span class="bank">SIMBANK</span></div>' +
-      '<div><div class="lbl">на карте</div><div class="bal num">' + money(c.bal.confirmed) + '</div>' + usdLine(c) + '</div>' +
-      '<div class="bottom">' + names + '</div></div>';
+    h += '<div class="simcard"><div class="top"><span class="ppbrand"><img class="pplogo" src="icon-192.png" alt="" width="40" height="40"><b>PIPO</b></span><span class="bank">SIMBANK</span></div>' +
+      '<div><div class="bal num">' + money(c.bal.confirmed) + '</div>' + usdLine(c) + '</div></div>';
     h += '<div class="card-notes">';
     if (c.bal.pendingIn > 0) h += '<span class="note-chip">Ждут проверки: <b>' + money(c.bal.pendingIn) + '</b></span>';
     if (c.bal.approvedNotPaid > 0) h += '<span class="note-chip">Одобрено, ещё не оплачено: <b>' + money(c.bal.approvedNotPaid) + '</b></span>';
