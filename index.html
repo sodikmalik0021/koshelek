@@ -530,6 +530,25 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .presets button:active { background: rgba(124,58,237,.12); }
 .chart { width: 100%; height: auto; display: block; }
 .chart text { fill: var(--ink-soft); font-size: 9.5px; }
+.fx{background:var(--paper);border-radius:22px;padding:16px;margin-bottom:10px;box-shadow:0 8px 22px -12px rgba(91,43,217,.35);display:flex;flex-direction:column;gap:10px}
+.fx .fxchips,.fx .fxper{display:flex;gap:6px;flex-wrap:wrap}
+.fx .fxchips button{flex:1 1 auto;border:0;border-radius:999px;min-height:36px;padding:6px 10px;font-weight:600;font-size:13px;font-family:inherit;background:var(--snow,#f3efff);color:var(--ink);cursor:pointer}
+.fx .fxchips button[aria-pressed="true"]{background:var(--violet);color:#fff}
+.fx .fxper button{flex:1 1 0;min-height:36px;padding:6px 2px;border:1px solid var(--line);background:transparent;border-radius:999px;font-weight:600;font-size:12.5px;font-family:inherit;color:var(--ink);cursor:pointer;white-space:nowrap}
+.fx .fxper button[aria-pressed="true"]{background:var(--lake-deep);border-color:var(--lake-deep);color:var(--paper)}
+.fx .fxlbl{color:var(--ink-soft);font-size:13px}
+.fx .fxbig{font-weight:800;font-size:52px;line-height:1;letter-spacing:-.02em;color:var(--lake-deep);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fx .fxbadge{font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;letter-spacing:0}
+.fx .fxbadge.dn{background:var(--bad-bg);color:var(--bad)}.fx .fxbadge.up{background:var(--good-bg);color:var(--good)}
+.fx .fxchart text{fill:var(--ink-soft);font-size:10px}
+.fx .fxconv{position:relative;border:1px solid var(--line);border-radius:18px;padding:4px 14px}
+.fx .fxf{display:flex;align-items:center;gap:10px;padding:8px 0}
+.fx .fxf+.fxf{border-top:1px solid var(--line)}
+.fx .fxf label{display:block;font-size:12px;color:var(--ink-soft)}
+.fx .fxf input{width:100%;min-width:0;border:0!important;background:transparent!important;font-weight:700;font-size:24px;color:var(--ink);outline:none;padding:0!important;margin:0!important;box-shadow:none!important;border-radius:0!important;height:auto!important}
+.fx .fxf b.cur{margin-left:auto;color:var(--violet)}
+.fx .fxswap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;margin:0;padding:0;z-index:1;border:0;border-radius:50%;background:var(--violet);color:#fff;font-size:18px;cursor:pointer}
+.fx .fxnote{font-size:12px;color:var(--ink-soft)}
 .chart .gl { stroke: var(--violet); stroke-opacity: .35; stroke-dasharray: 3 3; }
 .ach { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
 .ach > div { text-align: center; font-size: 11.5px; line-height: 1.2; color: var(--ink); }
@@ -1863,6 +1882,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       h += '</div>';
     }
 
+    h += fxHtml();
     h += goalHtml(c);
     h += flamesHtml(c);
     h += achHtml(c);
@@ -2173,6 +2193,52 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     if (isAdmin) h += '<div class="btns" style="margin-top:12px">' + btn('Изменить', 'goal-edit', '', 'ghost sm') + btn('Убрать', 'goal-del', '', 'ghost sm') + '</div>';
     return h + '</div>';
   }
+  // ---------------------------------------------------------------- exchange rates (NBKR)
+  var FX_NAMES = { USD: ['Доллар США', '$', 2], EUR: ['Евро', '€', 2], RUB: ['Российский рубль', '₽', 3], KZT: ['Казахстанский тенге', '₸', 3], CNY: ['Китайский юань', '¥', 2] };
+  var FX_PER = [['48 ч', 3], ['1 нед', 8], ['1 мес', 31], ['6 мес', 186], ['12 мес', 366], ['5 лет', 1830]];
+  var FX = { code: 'USD', pi: 0, mode: 'kgs', data: {}, loading: {}, failed: false };
+  function fxFmt(x, f) { return Number(x).toLocaleString('ru-RU', { minimumFractionDigits: f, maximumFractionDigits: f }); }
+  function fxLoad(code) {
+    if (FX.data[code] || FX.loading[code]) return;
+    FX.loading[code] = true;
+    API.rpcGet('fx', { p_code: code, p_days: 1830 }).then(function (r) { FX.data[code] = Array.isArray(r) ? r : []; FX.loading[code] = false; if (S.phase === 'app' && S.tab === 'home') render(); },
+      function () { FX.loading[code] = false; FX.failed = true; });
+  }
+  function fxChart(pts, f) {
+    var W = 320, H = 140, pad = 44, v = pts.map(function (p) { return p.v; }), mn = Math.min.apply(0, v), mx = Math.max.apply(0, v), sp = (mx - mn) || mx * 0.01 || 1;
+    mn -= sp * .15; mx += sp * .15;
+    var X = function (i) { return 2 + (W - pad - 2) * (pts.length < 2 ? 1 : i / (pts.length - 1)); }, Y = function (a) { return H - 6 - (H - 12) * (a - mn) / (mx - mn); };
+    var line = pts.length < 2 ? 'M2 ' + Y(v[0]).toFixed(1) + ' L' + (W - pad) + ' ' + Y(v[0]).toFixed(1) : 'M' + pts.map(function (p, i) { return X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' L');
+    var area = line + ' L' + (W - pad) + ' ' + H + ' L2 ' + H + ' Z', g = '';
+    for (var k = 0; k < 3; k++) { var gy = 6 + (H - 12) * k / 2; g += '<line x1="0" x2="' + (W - pad + 6) + '" y1="' + gy + '" y2="' + gy + '" stroke="var(--line)"/><text x="' + W + '" y="' + (gy + 4) + '" text-anchor="end">' + fxFmt(mx - (mx - mn) * k / 2, f) + '</text>'; }
+    return '<svg class="fxchart chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="График курса"><defs><linearGradient id="fxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".3"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs>' + g +
+      '<path d="' + area + '" fill="url(#fxg)"/><path d="' + line + '" fill="none" stroke="#5b2bd9" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="' + X(pts.length - 1).toFixed(1) + '" cy="' + Y(v[v.length - 1]).toFixed(1) + '" r="4.5" fill="#5b2bd9" stroke="var(--paper)" stroke-width="2"/></svg>';
+  }
+  function fxConv() {
+    var r = (FX.data[FX.code] || []), cur = r.length ? r[r.length - 1].v : 0, a = parseFloat(String(S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt']).replace(/\s/g, '').replace(',', '.')) || 0;
+    return fxFmt(FX.mode === 'kgs' ? a / (cur || 1) : a * cur, 2);
+  }
+  function fxHtml() {
+    fxLoad(FX.code);
+    var rows = FX.data[FX.code];
+    if (!rows) return FX.failed ? '' : '<div class="fx"><div class="fxlbl">Загружаю курс…</div></div>';
+    if (!rows.length) return '';
+    var nm = FX_NAMES[FX.code], f = nm[2], cur = rows[rows.length - 1], prev = rows.length > 1 ? rows[rows.length - 2] : null;
+    var today = Date.parse(cur.d + 'T00:00:00Z'), from = today - (FX_PER[FX.pi][1] - 1) * 864e5;
+    var pts = rows.filter(function (p) { return Date.parse(p.d + 'T00:00:00Z') >= from; }).map(function (p) { return { d: p.d, v: Number(p.v) }; });
+    if (!pts.length) pts = [{ d: cur.d, v: Number(cur.v) }];
+    var dlt = prev ? Number(cur.v) - Number(prev.v) : 0, badge = prev && Math.abs(dlt) >= Math.pow(10, -f) / 2 ? '<span class="fxbadge ' + (dlt < 0 ? 'dn' : 'up') + '">' + (dlt < 0 ? '▼ ' : '▲ ') + fxFmt(Math.abs(dlt), f) + '</span>' : '';
+    var a = FX.mode === 'kgs' ? 'сом' : nm[1], b = FX.mode === 'kgs' ? nm[1] : 'сом';
+    var amt = S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt'];
+    return '<div class="fx"><div class="fxchips">' + Object.keys(FX_NAMES).map(function (k) { return '<button type="button" data-act="fxc" data-id="' + k + '" aria-pressed="' + (k === FX.code) + '">' + k + '</button>'; }).join('') + '</div>' +
+      '<div class="fxlbl">Официальный курс НБКР · ' + nm[0] + '</div><div class="fxbig num">' + fxFmt(cur.v, f) + badge + '</div><div class="fxlbl">сом за 1 ' + nm[1] + ' · на ' + CW.prettyDate(cur.d, false) + '</div>' +
+      fxChart(pts, f) + (pts.length < 2 ? '<div class="fxnote">История копится каждый день, график появится по мере накопления данных.</div>' : '') +
+      '<div class="fxper">' + FX_PER.map(function (p, i) { return '<button type="button" data-act="fxp" data-id="' + i + '" aria-pressed="' + (i === FX.pi) + '">' + p[0] + '</button>'; }).join('') + '</div>' +
+      '<div class="fxconv"><div class="fxf"><div style="flex:1;min-width:0"><label for="fx-amt">Отдаю</label><input id="fx-amt" class="num" inputmode="decimal" value="' + esc(amt) + '"></div><b class="cur">' + a + '</b></div>' +
+      '<div class="fxf"><div style="flex:1;min-width:0"><label>Получаю</label><input id="fx-out" class="num" readonly tabindex="-1" value="' + fxConv() + '"></div><b class="cur">' + b + '</b></div>' +
+      '<button type="button" class="fxswap" data-act="fxswap" aria-label="Поменять местами">⇅</button></div></div>';
+  }
+  document.addEventListener('input', function (ev) { if (ev.target && ev.target.id === 'fx-amt') { var o = document.getElementById('fx-out'); if (o) o.value = fxConv(); } });
   function chartHtml(c) {
     var s = c.d.settings, tx = CW.buildTransactions(s, c.d.contributions, c.d.expenses, c.byId), pts = [], last = null;
     tx.forEach(function (t) { if (last && last.d === t.date) last.b = t.balanceAfter; else { last = { d: t.date, b: t.balanceAfter }; pts.push(last); } });
@@ -2759,6 +2825,9 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
     switch (act) {
       case 'reload': location.reload(); break;
+      case 'fxc': FX.code = id; render(); break;
+      case 'fxp': FX.pi = parseInt(id, 10); render(); break;
+      case 'fxswap': FX.mode = FX.mode === 'kgs' ? 'usd' : 'kgs'; S.drafts['fx-amt'] = undefined; render(); break;
       case 'tab': {
         var nt = t.getAttribute('data-tab');
         if (nt !== S.tab) { S.tab = nt; S.enter = true; window.scrollTo(0, 0); render(); }
