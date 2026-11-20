@@ -2195,7 +2195,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   }
   // ---------------------------------------------------------------- exchange rates (NBKR)
   var FX_NAMES = { USD: ['Доллар США', '$', 2], EUR: ['Евро', '€', 2], RUB: ['Российский рубль', '₽', 3], KZT: ['Казахстанский тенге', '₸', 3], CNY: ['Китайский юань', '¥', 2] };
-  var FX_PER = [['48 ч', 3], ['1 нед', 8], ['1 мес', 31], ['6 мес', 186], ['12 мес', 366], ['5 лет', 1830]];
+  var FX_PER = [['48 ч', 4], ['1 нед', 8], ['1 мес', 31], ['6 мес', 186], ['12 мес', 366], ['5 лет', 1830]];
   var FX = { code: 'USD', pi: 0, mode: 'kgs', data: {}, loading: {}, failed: false };
   function fxFmt(x, f) { return Number(x).toLocaleString('ru-RU', { minimumFractionDigits: f, maximumFractionDigits: f }); }
   function fxLoad(code) {
