@@ -2306,8 +2306,8 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     return '<svg class="fxchart chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="График курса"><defs><linearGradient id="fxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".3"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs>' + g +
       '<path d="' + area + '" fill="url(#fxg)"/><path d="' + line + '" fill="none" stroke="#5b2bd9" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="' + X(pts.length - 1).toFixed(1) + '" cy="' + Y(v[v.length - 1]).toFixed(1) + '" r="4.5" fill="#5b2bd9" stroke="var(--paper)" stroke-width="2"/></svg>';
   }
-  function fxConv() {
-    var r = (FX.data[FX.code] || []), cur = r.length ? r[r.length - 1].v : 0, a = parseFloat(String(S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt']).replace(/\s/g, '').replace(',', '.')) || 0;
+  function fxConv(raw) {
+    var r = (FX.data[FX.code] || []), cur = r.length ? Number(r[r.length - 1].v) : 0, src = raw !== undefined ? raw : (S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt']), a = parseFloat(String(src).replace(/\s/g, '').replace(',', '.')) || 0;
     return fxFmt(FX.mode === 'kgs' ? a / (cur || 1) : a * cur, 2);
   }
   function fxHtml() {
@@ -2330,7 +2330,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       '<div class="fxf"><div style="flex:1;min-width:0"><label>Получаю</label><input id="fx-out" class="num" readonly tabindex="-1" value="' + fxConv() + '"></div><b class="cur">' + b + '</b></div>' +
       '<button type="button" class="fxswap" data-act="fxswap" aria-label="Поменять местами">⇅</button></div></div>';
   }
-  document.addEventListener('input', function (ev) { if (ev.target && ev.target.id === 'fx-amt') { var o = document.getElementById('fx-out'); if (o) o.value = fxConv(); } });
+  document.addEventListener('input', function (ev) { if (ev.target && ev.target.id === 'fx-amt') { var o = document.getElementById('fx-out'); if (o) o.value = fxConv(ev.target.value); } });
   function chartHtml(c) {
     var s = c.d.settings, tx = CW.buildTransactions(s, c.d.contributions, c.d.expenses, c.byId), pts = [], last = null;
     tx.forEach(function (t) { if (last && last.d === t.date) last.b = t.balanceAfter; else { last = { d: t.date, b: t.balanceAfter }; pts.push(last); } });
