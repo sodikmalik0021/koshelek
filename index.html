@@ -628,11 +628,11 @@ html[data-theme="dark"] .composer input, .composer input { background: transpare
 
 /* ================= ПЛАСТИЛИН 3D ================= */
 :root {
-  --clay-bg: #e9e4f7; --clay: #f3effd; --clay-ink: #3a335a; --clay-soft: #8b84ab;
+  --clay-bg: #e9e4f7; --clay: #f3effd; --clay-ink: #3a335a; --clay-soft: #6b6490;
   --v1: #a58cf2; --v2: #7a5ce0; --v-deep: #4a3f7a; --mint1: #7fdcb3; --mint2: #4fbf8f; --coral1: #ffb39a; --coral2: #f58b6b; --rose: #e8587a;
   --sh-out: 10px 10px 22px #cdc6e6, -8px -8px 18px #ffffff; --sh-out-s: 6px 6px 12px #d0c9e8, -5px -5px 12px #ffffff;
   --sh-in: inset 4px 4px 9px #d2cbe9, inset -4px -4px 9px #ffffff; --puff: inset 2px 2px 5px rgba(255,255,255,.45), inset -3px -4px 8px rgba(40,20,110,.22);
-  --lake: #7a5ce0; --lake-deep: #3a335a; --violet: #7a5ce0; --pink: #e8587a; --ink: #3a335a; --ink-soft: #8b84ab; --line: #ddd6f1; --paper: #f3effd;
+  --lake: #7a5ce0; --lake-deep: #3a335a; --violet: #7a5ce0; --pink: #e8587a; --ink: #3a335a; --ink-soft: #6b6490; --line: #ddd6f1; --paper: #f3effd;
   --good: #2f9e72; --bad: #d94a6b; --good-bg: #dcf5ea; --bad-bg: #ffe2ea; --warn-bg: #fff1d4; --info-bg: #e9e4fb;
 }
 html[data-theme="dark"] {
@@ -950,6 +950,16 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   #app.tab-chat .composer { position: relative; bottom: auto; flex: none; margin: 6px 0 18px; }
 }
 .showpw{display:flex;align-items:center;gap:8px;margin:8px 0 12px;font-size:14px;color:var(--ink-soft)}.showpw input{width:auto;min-height:0;margin:0}
+
+/* Дизайн-аудит: контраст, фокус, цифры, крупные кнопки */
+.big, .simcard .bal, .num, td, .pc-bot { font-variant-numeric: tabular-nums; }
+a:focus-visible, summary:focus-visible, [data-act]:focus-visible, [role="button"]:focus-visible { outline: 3px solid rgba(124,58,237,.55); outline-offset: 2px; }
+.fx .fxchart text { font-size: 11px; }
+.fx .fxf label, .fx .fxnote { font-size: 13px; }
+@media (pointer: coarse) {
+  .fx .fxchips button, .fx .fxper button, .seg button { min-height: 44px; }
+  .backlink { min-height: 44px; padding-top: 0; }
+}
 </style>
 <div id="splash" aria-live="polite" aria-label="PIPO"><!--PIPO-SPLASH-HTML-->
   <video class="pp-vid" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
@@ -1594,7 +1604,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     ];
     var body = { home: viewHome, payments: viewPayments, expenses: viewExpenses, chat: viewChat, history: viewHistory, more: viewMore }[S.tab](c);
     var unread = chatUnread();
-    var back = (S.tab === 'history' || S.tab === 'expenses' || S.tab === 'payments') ? '<button class="backlink" data-act="tab" data-tab="home">‹ Главная</button>' : '';
+    var back = (S.tab === 'history' || S.tab === 'expenses' || S.tab === 'payments') ? '<button class="backlink" data-act="tab" data-tab="home" aria-label="Назад на главную">‹ Главная</button>' : '';
     body = back + (S.live ? '' : '<div class="msg warn" style="margin-top:12px">Нет связи с интернетом. Показаны последние данные — изменения пока не сохранятся.</div>') + body;
     return '<div id="app" class="' + (S.enter ? 'enter ' : '') + 'tab-' + S.tab + (S.sub ? ' insub' : '') + '">' +
       '<div class="topbar"><span class="hello"><small>Привет, ' + esc(firstName(c.me)) + '</small><b>' + esc(statusLine(c)) + '</b></span>' +
