@@ -3010,7 +3010,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       var cv = await rcCanvas(blob);
       var T = await rcLoadTess();
       var out = await T.recognize(cv, 'rus+eng');
-      var r = rcParse(out && out.data && out.data.text, today());
+      var r = rcParse(out && out.data && out.data.text, CW.today());
       if (!r.amount) { rcOverlay(''); toast('Не получилось прочитать сумму. Попробуйте другой скриншот.', true); return; }
       var jpeg = cv.toDataURL('image/jpeg', 0.7);
       if (jpeg.length > 850000) jpeg = cv.toDataURL('image/jpeg', 0.5);
