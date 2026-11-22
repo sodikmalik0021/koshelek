@@ -1923,7 +1923,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var s = c.d.settings, m = c.summaries[c.me.id];
     try {
       if (k === 'dl') return m ? 'до ' + CW.prettyDate(m.nextDeadline, false) : 'Сроки оплаты';
-      if (k === 'fx') { var r = FX.data.USD; return r && r.length ? '1 $ = ' + fxFmt(r[r.length - 1].v, 2) + ' сом' : 'НБКР'; }
+      if (k === 'fx') { var fi = fxInfo('USD'); return fi ? '1 $ = ' + fxFmt(fi.cur, 2) + ' сом' : 'Курс банков'; }
       if (k === 'us') { var n = c.profiles.length, ok = c.profiles.filter(function (p) { return c.summaries[p.id].current.remaining === 0; }).length; return ok + ' из ' + n + ' оплатили'; }
       if (k === 'go') { var g = c.d.goal; return g && g.target ? Math.min(100, Math.round(c.bal.confirmed / g.target * 100)) + '% до цели' : 'Баланс и цель'; }
       if (k === 'ac') { var l = achList(c); return l.filter(Boolean).length + ' из ' + l.length + ' открыто'; }
@@ -1931,10 +1931,9 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     return 'Последние события';
   }
   function usdLine(c) {
-    fxLoad('USD');
-    var r = FX.data.USD; if (!r || !r.length) return '';
-    var rate = Number(r[r.length - 1].v); if (!(rate > 0)) return '';
-    return '<div class="usd num">≈ $' + fxFmt(c.bal.confirmed / rate, 2) + '</div>';
+    fxLoad('USD'); fxLoadBank('USD');
+    var inf = fxInfo('USD'); if (!inf || !(inf.sell > 0)) return '';
+    return '<div class="usd num">≈ $' + fxFmt(c.bal.confirmed / inf.sell, 2) + '</div>';
   }
   function tilesHtml(c) {
     fxLoad('USD');
@@ -2295,7 +2294,8 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   // ---------------------------------------------------------------- exchange rates (NBKR)
   var FX_NAMES = { USD: ['Доллар США', '$', 2], EUR: ['Евро', '€', 2], RUB: ['Российский рубль', '₽', 3], KZT: ['Казахстанский тенге', '₸', 3], CNY: ['Китайский юань', '¥', 2] };
   var FX_PER = [['48 ч', 4], ['1 нед', 8], ['1 мес', 31], ['6 мес', 186], ['12 мес', 366], ['5 лет', 1830]];
-  var FX = { code: 'USD', pi: 0, mode: 'kgs', data: {}, loading: {}, at: {}, failed: false };
+  var FX = { code: 'USD', pi: 0, mode: 'kgs', src: 'obank', data: {}, bank: {}, loading: {}, at: {}, failed: false };
+  var FX_SRC = { obank: 'О!Банк', eldik: 'Эльдик Банк', nbkr: 'НБКР' };
   function fxFmt(x, f) { return Number(x).toLocaleString('ru-RU', { minimumFractionDigits: f, maximumFractionDigits: f }); }
   function fxLoad(code) {
     if (FX.loading[code] || (FX.data[code] && Date.now() - (FX.at[code] || 0) < 1800000)) return;
@@ -2313,25 +2313,61 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     return '<svg class="fxchart chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="График курса"><defs><linearGradient id="fxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".3"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs>' + g +
       '<path d="' + area + '" fill="url(#fxg)"/><path d="' + line + '" fill="none" stroke="#5b2bd9" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="' + X(pts.length - 1).toFixed(1) + '" cy="' + Y(v[v.length - 1]).toFixed(1) + '" r="4.5" fill="#5b2bd9" stroke="var(--paper)" stroke-width="2"/></svg>';
   }
+  function fxLoadBank(code) {
+    var k = 'b' + code;
+    if (FX.loading[k] || (FX.bank[code] && Date.now() - (FX.at[k] || 0) < 120000)) return;
+    FX.loading[k] = true;
+    API.rpcGet('fx_banks', { p_code: code, p_days: 1830 }).then(function (r) { FX.bank[code] = r && typeof r === 'object' ? r : {}; FX.at[k] = Date.now(); FX.loading[k] = false; if (S.phase === 'app' && S.tab === 'home') render(); },
+      function () { FX.loading[k] = false; FX.bank[code] = FX.bank[code] || {}; });
+  }
+  // one place that knows the current figures for the chosen source: {buy, sell, cur, prev, pts, upd}
+  function fxInfo(code, src) {
+    src = src || FX.src;
+    if (src !== 'nbkr') {
+      var rows = (FX.bank[code] || {})[src];
+      if (rows && rows.length) {
+        var last = rows[rows.length - 1], prv = null;
+        for (var i = rows.length - 2; i >= 0; i--) { if (Number(rows[i].s) !== Number(last.s)) { prv = rows[i]; break; } }
+        var from = Date.now() - FX_PER[FX.pi][1] * 864e5 * (FX.pi === 0 ? 0.5 : 1);
+        var pts = rows.filter(function (r) { return Date.parse(r.t) >= from; }).map(function (r) { return { v: Number(r.s) }; });
+        var before = rows.filter(function (r) { return Date.parse(r.t) < from; }); if (before.length) pts.unshift({ v: Number(before[before.length - 1].s) });
+        pts.push({ v: Number(last.s) });
+        return { bank: true, buy: Number(last.b), sell: Number(last.s), cur: Number(last.s), prev: prv ? Number(prv.s) : null, pts: pts, upd: last.t };
+      }
+    }
+    var d = FX.data[code];
+    if (d && d.length) {
+      var c = d[d.length - 1], pv = d.length > 1 ? d[d.length - 2] : null, today = Date.parse(c.d + 'T00:00:00Z'), fr = today - (FX_PER[FX.pi][1] - 1) * 864e5;
+      var pp = d.filter(function (r) { return Date.parse(r.d + 'T00:00:00Z') >= fr; }).map(function (r) { return { v: Number(r.v) }; });
+      return { bank: false, buy: Number(c.v), sell: Number(c.v), cur: Number(c.v), prev: pv ? Number(pv.v) : null, pts: pp.length ? pp : [{ v: Number(c.v) }], upd: c.d };
+    }
+    return null;
+  }
   function fxConv(raw) {
-    var r = (FX.data[FX.code] || []), cur = r.length ? Number(r[r.length - 1].v) : 0, src = raw !== undefined ? raw : (S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt']), a = parseFloat(String(src).replace(/\s/g, '').replace(',', '.')) || 0;
-    return fxFmt(FX.mode === 'kgs' ? a / (cur || 1) : a * cur, 2);
+    var inf = fxInfo(FX.code), src = raw !== undefined ? raw : (S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt']),
+      a = parseFloat(String(src).replace(/\s/g, '').replace(',', '.')) || 0;
+    if (!inf) return '0,00';
+    var rate = FX.mode === 'kgs' ? inf.sell : inf.buy; // buying currency costs the bank's sell rate, selling it gets the buy rate
+    return fxFmt(FX.mode === 'kgs' ? a / (rate || 1) : a * rate, 2);
   }
   function fxHtml() {
-    fxLoad(FX.code);
-    var rows = FX.data[FX.code];
-    if (!rows) return FX.failed ? '' : '<div class="fx"><div class="fxlbl">Загружаю курс…</div></div>';
-    if (!rows.length) return '';
-    var nm = FX_NAMES[FX.code], f = nm[2], cur = rows[rows.length - 1], prev = rows.length > 1 ? rows[rows.length - 2] : null;
-    var today = Date.parse(cur.d + 'T00:00:00Z'), from = today - (FX_PER[FX.pi][1] - 1) * 864e5;
-    var pts = rows.filter(function (p) { return Date.parse(p.d + 'T00:00:00Z') >= from; }).map(function (p) { return { d: p.d, v: Number(p.v) }; });
-    if (!pts.length) pts = [{ d: cur.d, v: Number(cur.v) }];
-    var dlt = prev ? Number(cur.v) - Number(prev.v) : 0, badge = prev && Math.abs(dlt) >= Math.pow(10, -f) / 2 ? '<span class="fxbadge ' + (dlt < 0 ? 'dn' : 'up') + '">' + (dlt < 0 ? '▼ ' : '▲ ') + fxFmt(Math.abs(dlt), f) + '</span>' : '';
+    fxLoad(FX.code); fxLoadBank(FX.code);
+    var inf = fxInfo(FX.code);
+    if (!inf) return FX.failed ? '' : '<div class="fx"><div class="fxlbl">Загружаю курс…</div></div>';
+    var nm = FX_NAMES[FX.code], f = nm[2], pts = inf.pts;
+    var dlt = inf.prev != null ? inf.cur - inf.prev : 0, badge = inf.prev != null && Math.abs(dlt) >= Math.pow(10, -f) / 2 ? '<span class="fxbadge ' + (dlt < 0 ? 'dn' : 'up') + '">' + (dlt < 0 ? '▼ ' : '▲ ') + fxFmt(Math.abs(dlt), f) + '</span>' : '';
     var a = FX.mode === 'kgs' ? 'сом' : nm[1], b = FX.mode === 'kgs' ? nm[1] : 'сом';
     var amt = S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt'];
-    return '<div class="fx"><div class="fxchips">' + Object.keys(FX_NAMES).map(function (k) { return '<button type="button" data-act="fxc" data-id="' + k + '" aria-pressed="' + (k === FX.code) + '">' + k + '</button>'; }).join('') + '</div>' +
-      '<div class="fxlbl">Официальный курс НБКР · ' + nm[0] + '</div><div class="fxbig num">' + fxFmt(cur.v, f) + badge + '</div><div class="fxlbl">сом за 1 ' + nm[1] + ' · на ' + CW.prettyDate(cur.d, false) + '</div>' +
-      fxChart(pts, f) + (pts.length < 2 ? '<div class="fxnote">История копится каждый день, график появится по мере накопления данных.</div>' : '') +
+    var srcName = inf.bank ? FX_SRC[FX.src] : 'НБКР';
+    var sub = inf.bank ? 'продажа · покупка ' + fxFmt(inf.buy, f) + ' · сом за 1 ' + nm[1] : 'сом за 1 ' + nm[1] + ' · официальный курс';
+    var note = '';
+    if (FX.src !== 'nbkr' && !inf.bank) note = 'Курс банка ещё загружается, пока показан официальный курс НБКР.';
+    else if (inf.bank && inf.prev == null) note = 'Банк пока не менял курс. Рост и падение появятся, как только он его изменит.';
+    else if (!inf.bank) note = 'НБКР меняет курс редко, иногда по нескольку дней он стоит на месте.';
+    return '<div class="fx"><div class="fxchips">' + Object.keys(FX_SRC).map(function (k) { return '<button type="button" data-act="fxs" data-id="' + k + '" aria-pressed="' + (k === FX.src) + '">' + FX_SRC[k] + '</button>'; }).join('') + '</div>' +
+      '<div class="fxchips">' + Object.keys(FX_NAMES).map(function (k) { return '<button type="button" data-act="fxc" data-id="' + k + '" aria-pressed="' + (k === FX.code) + '">' + k + '</button>'; }).join('') + '</div>' +
+      '<div class="fxlbl">' + srcName + ' · ' + nm[0] + '</div><div class="fxbig num">' + fxFmt(inf.cur, f) + badge + '</div><div class="fxlbl">' + sub + '</div>' +
+      fxChart(pts, f) + (note ? '<div class="fxnote">' + note + '</div>' : '') +
       '<div class="fxper">' + FX_PER.map(function (p, i) { return '<button type="button" data-act="fxp" data-id="' + i + '" aria-pressed="' + (i === FX.pi) + '">' + p[0] + '</button>'; }).join('') + '</div>' +
       '<div class="fxconv"><div class="fxf"><div style="flex:1;min-width:0"><label for="fx-amt">Отдаю</label><input id="fx-amt" class="num" inputmode="decimal" value="' + esc(amt) + '"></div><b class="cur">' + a + '</b></div>' +
       '<div class="fxf"><div style="flex:1;min-width:0"><label>Получаю</label><input id="fx-out" class="num" readonly tabindex="-1" value="' + fxConv() + '"></div><b class="cur">' + b + '</b></div>' +
@@ -2926,6 +2962,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       case 'reload': location.reload(); break;
       case 'flip': if (ev.target.closest && ev.target.closest('.pc-copy')) break; S.flip = !S.flip; var fe = document.querySelector('.pflip'); if (fe) fe.classList.toggle('on', S.flip); break;
       case 'sub': S.sub = id || null; window.scrollTo(0, 0); render(); break;
+      case 'fxs': FX.src = id; render(); break;
       case 'fxc': FX.code = id; render(); break;
       case 'fxp': FX.pi = parseInt(id, 10); render(); break;
       case 'fxswap': FX.mode = FX.mode === 'kgs' ? 'usd' : 'kgs'; S.drafts['fx-amt'] = undefined; render(); break;
