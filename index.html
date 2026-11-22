@@ -576,6 +576,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .pc-stripe{margin:14px -20px 0;height:34px;background:linear-gradient(#0a0a0c,#151518)}
 .pc-num{margin-top:14px}.pc-num small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;opacity:.7}
 .pc-num span{display:block;margin-top:4px;font:600 19px ui-monospace,Menlo,monospace;letter-spacing:.06em}
+.pc-copy{margin-top:8px;border:0;border-radius:999px;padding:7px 14px;background:rgba(255,255,255,.16);color:#fff;font:700 12.5px inherit;font-family:inherit;cursor:pointer}
 .pc-botline{margin-top:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.16)}
 @media (prefers-reduced-motion:reduce){.pflip .pcard{transition:none}}
 .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
@@ -1955,6 +1956,12 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var s = c.d.settings, h = '';
     if (S.sub && s.setup_done) return subPage(c);
     var names = c.profiles.map(function (p) { return esc(p.full_name.split(' ')[0]); }).join(' · ');
+    if (!S.payInfo && !S.payInfoLoading && S.phase === 'app') {
+      S.payInfoLoading = true;
+      API.rpcGet('pay_info', {}).then(function (x) { S.payInfo = x || {}; S.payInfoLoading = false; render(); }, function () { S.payInfoLoading = false; });
+    }
+    var pcCard = String((S.payInfo || {}).card || '').replace(/\D/g, ''), pcHolder = (S.payInfo || {}).holder || '',
+      pcNum = pcCard ? pcCard.replace(/(.{4})/g, '$1 ').trim() : '•••• •••• •••• ••••';
     var bal = Number(c.bal.confirmed) || 0;
     h += '<div class="pflip' + (S.flip ? ' on' : '') + '" data-act="flip" role="button" tabindex="0" aria-label="Перевернуть карту">' +
       '<div class="pcard pfront"><svg class="pc-wave" viewBox="0 0 200 126" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pcw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9d5cf0"/><stop offset="1" stop-color="#5b3fc4"/></linearGradient></defs><path d="M130 0 C112 40 128 70 100 126 L200 126 L200 0 Z" fill="url(#pcw)" opacity=".85"/><path d="M158 0 C142 42 150 74 126 126" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1"/></svg>' +
@@ -1963,7 +1970,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       '<div class="pc-chiprow"><span class="pc-chip"></span><svg class="pc-nfc" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8c2 2.6 2 5.4 0 8M9 6c3 3.6 3 8.4 0 12M13 4c4 4.6 4 11.4 0 16"/></svg></div>' +
       '<div class="pc-bot"><span>PIPO • EVERYDAY</span><i class="pc-visa">VISA</i></div></div>' +
       '<div class="pcard pback"><div class="pc-top"><b class="pc-name">PIPO</b><span class="pc-bank">SIMBANK</span></div><div class="pc-stripe"></div>' +
-      '<div class="pc-num"><small>НОМЕР КАРТЫ</small><span>•••• •••• •••• ••••</span></div>' +
+      '<div class="pc-num"><small>НОМЕР КАРТЫ' + (pcHolder ? ' · ' + esc(pcHolder) : '') + '</small><span>' + esc(pcNum) + '</span><button type="button" class="pc-copy" data-act="copy-card">Скопировать номер</button></div>' +
       '<div class="pc-bot pc-botline"><span>PIPO • EVERYDAY</span><i class="pc-visa">VISA</i></div></div></div>';
     h += '<div class="card-notes">';
     if (c.bal.pendingIn > 0) h += '<span class="note-chip">Ждут проверки: <b>' + money(c.bal.pendingIn) + '</b></span>';
@@ -2917,7 +2924,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
     switch (act) {
       case 'reload': location.reload(); break;
-      case 'flip': S.flip = !S.flip; var fe = document.querySelector('.pflip'); if (fe) fe.classList.toggle('on', S.flip); break;
+      case 'flip': if (ev.target.closest && ev.target.closest('.pc-copy')) break; S.flip = !S.flip; var fe = document.querySelector('.pflip'); if (fe) fe.classList.toggle('on', S.flip); break;
       case 'sub': S.sub = id || null; window.scrollTo(0, 0); render(); break;
       case 'fxc': FX.code = id; render(); break;
       case 'fxp': FX.pi = parseInt(id, 10); render(); break;
