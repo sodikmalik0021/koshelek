@@ -540,6 +540,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .fx .fxbig{font-weight:800;font-size:52px;line-height:1;letter-spacing:-.02em;color:var(--lake-deep);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .fx .fxbadge{font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;letter-spacing:0}
 .fx .fxbadge.dn{background:var(--bad-bg);color:var(--bad)}.fx .fxbadge.up{background:var(--good-bg);color:var(--good)}
+.fxdark{padding:12px 6px 6px 12px}.fxdark .fxtt{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:13px}.fxdark .fxtt b{color:#fff;font-size:14px}.fxdark .fxtt .u{color:#3fbf6f;font-weight:600}.fxdark .fxtt .d{color:#e5484d;font-weight:600}.fxdark .fxtt em{margin-left:auto;font-style:normal;color:#8d8d94;font-size:11px;padding-right:6px}.fxdark .fxohlc{font-size:10.5px;color:#9a9aa2;min-height:15px;margin:2px 0 2px;padding-right:6px}.fxdark .fxohlc b{color:#e8e8ea;font-weight:600}.fxdark svg{touch-action:pan-y}
 .fxdark{background:#131315;border-radius:16px;padding:10px 6px 6px 10px;color:#e8e8ea}.fxdark .fxlg{font-size:11px;color:#cfcfd4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.fxdark .fxlg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px}.fxdark svg{width:100%;height:auto;display:block}.fxdark text{fill:#8d8d94;font-size:9.5px}
 .fx .fxchart text{fill:var(--ink-soft);font-size:10px}
 .fx .fxconv{position:relative;border:1px solid var(--line);border-radius:18px;padding:4px 14px}
@@ -927,6 +928,25 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 @keyframes ppEdge{to{opacity:1}}
 @keyframes ppName{to{opacity:1;transform:none}}
 /* ===== /PIPO splash ===== */
+
+/* чат: лента прокручивается внутри, поле ввода и шапка стоят на месте */
+@media (max-width: 767px) {
+  #app.tab-chat { height: 100vh; height: var(--vvh, 100dvh); min-height: 0; overflow: hidden; padding-bottom: 0; }
+  #app.tab-chat .chat-top { position: relative; flex: none; }
+  #app.tab-chat .chat { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; justify-content: flex-start; padding: 4px 2px 12px; }
+  #app.tab-chat .chat > :first-child { margin-top: auto; }
+  #app.tab-chat .composer { position: relative; bottom: auto; flex: none; margin: 6px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 22px); }
+  body.typing { overflow: hidden; }
+  body.typing #app.tab-chat { position: fixed; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh); margin: 0 auto; max-width: 560px; padding: 0 16px; }
+  body.typing #app.tab-chat .composer { margin-bottom: calc(env(safe-area-inset-bottom) + 8px); }
+}
+@media (min-width: 768px) {
+  #app.tab-chat { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+  #app.tab-chat .chat-top { position: relative; flex: none; }
+  #app.tab-chat .chat { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; justify-content: flex-start; }
+  #app.tab-chat .chat > :first-child { margin-top: auto; }
+  #app.tab-chat .composer { position: relative; bottom: auto; flex: none; margin: 6px 0 18px; }
+}
 </style>
 <div id="splash" aria-live="polite" aria-label="PIPO"><!--PIPO-SPLASH-HTML-->
   <video class="pp-vid" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
@@ -1814,13 +1834,13 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       if (n) b.removeAttribute('hidden'); else b.setAttribute('hidden', '');
     });
   }
-  function scrollChatEnd() { window.scrollTo(0, document.documentElement.scrollHeight); }
+  function scrollChatEnd() { var el = document.getElementById('chat-list'); if (el) el.scrollTop = el.scrollHeight; }
   function updateChatList() {
     var el = document.getElementById('chat-list');
     if (!el || S.phase !== 'app' || !S.data) return;
-    var nearEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
+    var nearEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 160, keep = el.scrollTop;
     el.innerHTML = chatListHtml(derive());
-    if (nearEnd || S.chatToEnd) { scrollChatEnd(); S.chatToEnd = false; }
+    if (nearEnd || S.chatToEnd) { scrollChatEnd(); S.chatToEnd = false; } else el.scrollTop = keep;
   }
   var chatLoading = false;
   async function loadChat() {
@@ -2058,7 +2078,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   IC_PATHS.micoff = '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"/>';
   IC_PATHS.videooff = '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10l5-3v10l-5-3zM4 4l16 16"/>';
   var CALL = null;
-  var ICE_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
+  var ICE_CFG = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478', 'stun:global.stun.twilio.com:3478'] }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
   function callBannerHtml() { return ''; }
   function callBannerUpdate() {
     var p = S.callPeers || [], el = document.getElementById('callfloat');
@@ -2092,7 +2112,20 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     CALL.stream.getTracks().forEach(function (t) { pc.addTrack(t, CALL.stream); });
     pc.onicecandidate = function (e) { if (e.candidate) callSignal(id, 'ice', e.candidate); };
     pc.ontrack = function (e) { CALL.remote[id] = e.streams[0]; callDraw(); };
-    pc.onconnectionstatechange = function () { if (pc.connectionState === 'connected') { CALL.state[id] = 'ok'; callDraw(); } };
+    pc.onconnectionstatechange = function () {
+      if (!CALL || CALL.pcs[id] !== pc) return;
+      var st = pc.connectionState;
+      if (st === 'connected') { CALL.state[id] = 'ok'; }
+      else if (st === 'disconnected' || st === 'failed') {
+        CALL.state[id] = 'lost';
+        // тот, у кого id меньше, пробует соединиться заново
+        if (String(S.uid) < String(id) && !CALL.restarting) {
+          CALL.restarting = true;
+          setTimeout(function () { if (!CALL) return; CALL.restarting = false; if (CALL.pcs[id] === pc && pc.connectionState !== 'connected') callOffer(id).catch(function () { }); }, st === 'failed' ? 300 : 4000);
+        }
+      }
+      callDraw();
+    };
     return pc;
   }
   async function callOffer(id) {
@@ -2159,7 +2192,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       callDraw();
       for (var i = 0; i < CALL.peers.length; i++) await callOffer(CALL.peers[i].id);
     } catch (e) { toast('Не удалось начать звонок.', true); callEnd(false); return; }
-    CALL.timer = setInterval(callPoll, 1000);
+    CALL.timer = setInterval(callPoll, 700);
   }
   function callEnd(skipLeave) {
     if (!CALL) return;
@@ -2179,14 +2212,14 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     document.body.appendChild(el);
   }
   function callTile(key, name, stream, showVideo, mine, status) {
-    return '<div class="call-tile" data-k="' + key + '">' + (showVideo ? '<video playsinline autoplay ' + (mine ? 'muted class="mir"' : '') + '></video>' : '<video playsinline autoplay ' + (mine ? 'muted' : '') + ' style="display:none"></video><div class="call-ava">' + esc(String(name).charAt(0).toUpperCase()) + '</div>') +
+    return '<div class="call-tile" data-k="' + key + '">' + (showVideo ? '<video playsinline autoplay ' + (mine ? 'muted class="mir"' : '') + '></video>' : '<video playsinline autoplay ' + (mine ? 'muted' : '') + ' style="position:absolute;width:2px;height:2px;opacity:0;pointer-events:none"></video><div class="call-ava">' + esc(String(name).charAt(0).toUpperCase()) + '</div>') +
       '<span class="call-name">' + esc(mine ? 'Вы' : String(name).split(' ')[0]) + (status ? ' · ' + status : '') + '</span></div>';
   }
   function callDraw() {
     var g = document.getElementById('call-grid'); if (!g || !CALL) return;
     var c = null; try { c = derive(); } catch (e) { }
     var tiles = [{ key: 'me', name: c && c.me ? c.me.full_name : 'Я', stream: CALL.stream, v: CALL.video && !CALL.camOff, mine: true }];
-    CALL.peers.forEach(function (p) { tiles.push({ key: p.id, name: p.name, stream: CALL.remote[p.id], v: p.video, mine: false, st: CALL.state[p.id] === 'ok' ? '' : 'соединяем…' }); });
+    CALL.peers.forEach(function (p) { tiles.push({ key: p.id, name: p.name, stream: CALL.remote[p.id], v: p.video, mine: false, st: CALL.state[p.id] === 'ok' ? '' : (CALL.state[p.id] === 'lost' ? 'связь пропала, ждём…' : 'соединяем…') }); });
     var sig = JSON.stringify(tiles.map(function (t) { return [t.key, t.v, t.st || '', !!t.stream]; }));
     if (CALL.sig !== sig) {
       CALL.sig = sig;
@@ -2301,7 +2334,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   }
   // ---------------------------------------------------------------- exchange rates (NBKR)
   var FX_NAMES = { USD: ['Доллар США', '$', 2], EUR: ['Евро', '€', 2], RUB: ['Российский рубль', '₽', 3], KZT: ['Казахстанский тенге', '₸', 3], CNY: ['Китайский юань', '¥', 2] };
-  var FX_PER = [['48 ч', 2, 0], ['1 мес', 31, 1], ['3 мес', 92, 1], ['6 мес', 186, 2], ['12 мес', 366, 4], ['Всё', 1830, 7]];
+  var FX_PER = [['48 ч', 2, 0], ['1 мес', 31, 1], ['3 мес', 92, 1], ['6 мес', 186, 1], ['12 мес', 366, 2], ['Всё', 1830, 7]];
   var FX = { code: 'USD', pi: 0, mode: 'kgs', src: 'obank', data: {}, bank: {}, loading: {}, at: {}, failed: false };
   var FX_SRC = { obank: 'О!Банк', eldik: 'Эльдик Банк', nbkr: 'НБКР' };
   function fxFmt(x, f) { return Number(x).toLocaleString('ru-RU', { minimumFractionDigits: f, maximumFractionDigits: f }); }
@@ -2320,38 +2353,68 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     }
     return out;
   }
-  function fxChart(cs, f) {
-    var W = 360, H = 230, pr = 46, bt = 6, n = cs.length;
+  var FX_LAST = { cs: [], f: 2, W: 360, pr: 46 };
+  function fxDate(ms, long) {
+    var d = new Date(ms), M = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    return long ? d.getUTCDate() + ' ' + M[d.getUTCMonth()] + ' ' + d.getUTCFullYear() : d.getUTCDate() + ' ' + M[d.getUTCMonth()];
+  }
+  function fxChart(cs, f, title) {
+    var W = 360, H = 270, pr = 46, bt = 8, bb = 20, n = cs.length;
     if (!n) return '';
+    FX_LAST = { cs: cs, f: f, W: W, pr: pr };
     var hi = Math.max.apply(0, cs.map(function (x) { return x.h; })), lo = Math.min.apply(0, cs.map(function (x) { return x.l; })), sp = (hi - lo) || hi * 0.01 || 1;
     hi += sp * .08; lo -= sp * .08;
-    var pw = W - pr, X = function (i) { return pw * (i + 0.5) / n; }, Y = function (v) { return bt + (H - bt * 2) * (hi - v) / (hi - lo); };
-    var bw = Math.max(1.2, Math.min(9, pw / n * 0.62)), g = '';
-    for (var k = 0; k < 5; k++) { var gy = bt + (H - bt * 2) * k / 4; g += '<line x1="0" x2="' + pw + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#2a2a2e" stroke-width="1"/><text x="' + (W - 2) + '" y="' + (gy + 3.5).toFixed(1) + '" text-anchor="end">' + fxFmt(hi - (hi - lo) * k / 4, f) + '</text>'; }
+    var pw = W - pr, ph = H - bt - bb, X = function (i) { return pw * (i + 0.5) / n; }, Y = function (v) { return bt + ph * (hi - v) / (hi - lo); };
+    var bw = Math.max(1.1, Math.min(9, pw / n * 0.66)), g = '';
+    for (var k = 0; k < 6; k++) { var gy = bt + ph * k / 5; g += '<line x1="0" x2="' + pw + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#26262b" stroke-width="1"/><text x="' + (W - 3) + '" y="' + (gy + 3.5).toFixed(1) + '" text-anchor="end">' + fxFmt(hi - (hi - lo) * k / 5, f) + '</text>'; }
+    // подписи времени снизу
+    var ticks = Math.min(5, n), tx = '';
+    for (var q = 0; q < ticks; q++) { var ix = Math.round((n - 1) * (q + 0.5) / ticks), lab = cs[ix] && cs[ix].t ? fxDate(cs[ix].t, n > 120) : ''; tx += '<line x1="' + X(ix).toFixed(1) + '" x2="' + X(ix).toFixed(1) + '" y1="' + bt + '" y2="' + (H - bb) + '" stroke="#1d1d21" stroke-width="1"/><text x="' + X(ix).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle">' + lab + '</text>'; }
     var cd = '';
     cs.forEach(function (x, i) {
-      var up = x.c >= x.o, col = up ? '#3fbf6f' : '#e5484d', yo = Y(x.o), yc = Y(x.c), top = Math.min(yo, yc), hh = Math.max(1.2, Math.abs(yo - yc));
-      cd += '<line x1="' + X(i).toFixed(1) + '" x2="' + X(i).toFixed(1) + '" y1="' + Y(x.h).toFixed(1) + '" y2="' + Y(x.l).toFixed(1) + '" stroke="' + col + '" stroke-width="1"/><rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + hh.toFixed(1) + '" fill="' + col + '"/>';
+      var up = x.c >= x.o, col = up ? '#3fbf6f' : '#e5484d', yo = Y(x.o), yc = Y(x.c), top = Math.min(yo, yc), hh = Math.max(1.1, Math.abs(yo - yc));
+      cd += '<line x1="' + X(i).toFixed(1) + '" x2="' + X(i).toFixed(1) + '" y1="' + Y(x.h).toFixed(1) + '" y2="' + Y(x.l).toFixed(1) + '" stroke="' + col + '" stroke-width="' + (bw < 2.5 ? 1 : 1.2) + '"/><rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + hh.toFixed(1) + '" fill="' + col + '"/>';
     });
     var cl = cs.map(function (x) { return x.c; }), per = Math.min(20, Math.max(3, Math.round(n / 4)));
-    var line = function (arr, col) { return '<path d="M' + arr.map(function (v, i) { return X(i).toFixed(1) + ' ' + Y(v).toFixed(1); }).join(' L') + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-linejoin="round"/>'; };
-    var last = cl[n - 1], ly = Y(last);
-    return '<div class="fxdark"><div class="fxlg"><b>Ma (' + per + ', Ema)</b> <i style="background:#f1e65a"></i> <b>Ma (' + per + ')</b> <i style="background:#e5484d"></i></div>' +
-      '<svg class="fxchart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Свечной график курса">' + g + cd + line(fxMA(cl, per, true), '#f1e65a') + line(fxMA(cl, per, false), '#e5484d') +
-      '<line x1="0" x2="' + pw + '" y1="' + ly.toFixed(1) + '" y2="' + ly.toFixed(1) + '" stroke="#3fbf6f" stroke-dasharray="3 3" stroke-width="1"/><rect x="' + (pw + 1) + '" y="' + (ly - 8).toFixed(1) + '" width="' + (pr - 1) + '" height="16" rx="3" fill="' + (cs[n - 1].c >= cs[n - 1].o ? '#3fbf6f' : '#e5484d') + '"/><text x="' + (W - 2) + '" y="' + (ly + 3.5).toFixed(1) + '" text-anchor="end" style="fill:#fff;font-weight:700">' + fxFmt(last, f) + '</text></svg></div>';
+    var line = function (arr, col) { return '<path d="M' + arr.map(function (v, i) { return X(i).toFixed(1) + ' ' + Y(v).toFixed(1); }).join(' L') + '" fill="none" stroke="' + col + '" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>'; };
+    var last = cl[n - 1], ly = Y(last), first = cs[0].o, ch = last - first, pct = first ? ch / first * 100 : 0;
+    var col = last >= cs[n - 1].o ? '#3fbf6f' : '#e5484d';
+    return '<div class="fxdark"><div class="fxtt"><b>' + esc(title || '') + '</b><span class="' + (ch >= 0 ? 'u' : 'd') + '">' + (ch >= 0 ? '▲ ' : '▼ ') + fxFmt(Math.abs(ch), f) + ' (' + fxFmt(Math.abs(pct), 2) + ' %)</span><em>' + n + ' свеч.</em></div>' +
+      '<div class="fxlg"><b>Ma (' + per + ', Ema)</b><i style="background:#f1e65a"></i><b>Ma (' + per + ')</b><i style="background:#e5484d"></i></div>' +
+      '<div class="fxohlc" id="fx-ohlc">&nbsp;</div>' +
+      '<svg class="fxchart" id="fx-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Свечной график курса">' + g + tx + cd + line(fxMA(cl, per, true), '#f1e65a') + line(fxMA(cl, per, false), '#e5484d') +
+      '<line x1="0" x2="' + pw + '" y1="' + ly.toFixed(1) + '" y2="' + ly.toFixed(1) + '" stroke="' + col + '" stroke-dasharray="3 3" stroke-width="1"/><rect x="' + (pw + 1) + '" y="' + (ly - 8).toFixed(1) + '" width="' + (pr - 1) + '" height="16" rx="3" fill="' + col + '"/><text x="' + (W - 3) + '" y="' + (ly + 3.5).toFixed(1) + '" text-anchor="end" style="fill:#fff;font-weight:700">' + fxFmt(last, f) + '</text>' +
+      '<g id="fx-cross" style="display:none"><line id="fx-cv" y1="' + bt + '" y2="' + (H - bb) + '" stroke="#8d8d94" stroke-dasharray="2 3"/><line id="fx-ch" x1="0" x2="' + pw + '" stroke="#8d8d94" stroke-dasharray="2 3"/></g></svg></div>';
   }
+  // перекрестие: палец на графике показывает дату и цены свечи
+  function fxCross(ev) {
+    var svg = document.getElementById('fx-svg'); if (!svg || !FX_LAST.cs.length) return;
+    var pt = ev.touches ? ev.touches[0] : ev, r = svg.getBoundingClientRect(), L = FX_LAST, n = L.cs.length, pw = L.W - L.pr;
+    var x = (pt.clientX - r.left) / r.width * L.W, i = Math.max(0, Math.min(n - 1, Math.floor(x / pw * n))), c = L.cs[i];
+    var cx = pw * (i + 0.5) / n, g = document.getElementById('fx-cross');
+    g.style.display = ''; document.getElementById('fx-cv').setAttribute('x1', cx); document.getElementById('fx-cv').setAttribute('x2', cx);
+    var hi = Math.max.apply(0, L.cs.map(function (z) { return z.h; })), lo = Math.min.apply(0, L.cs.map(function (z) { return z.l; })), sp = (hi - lo) || hi * .01 || 1; hi += sp * .08; lo -= sp * .08;
+    var ph = 270 - 8 - 20, cy = 8 + ph * (hi - c.c) / (hi - lo), h = document.getElementById('fx-ch'); h.setAttribute('y1', cy); h.setAttribute('y2', cy);
+    var o = document.getElementById('fx-ohlc'); if (o) o.innerHTML = (c.t ? fxDate(c.t, true) + ' · ' : '') + 'Откр <b>' + fxFmt(c.o, L.f) + '</b> Макс <b>' + fxFmt(c.h, L.f) + '</b> Мин <b>' + fxFmt(c.l, L.f) + '</b> Закр <b>' + fxFmt(c.c, L.f) + '</b>';
+  }
+  function fxCrossOff() { var g = document.getElementById('fx-cross'); if (g) g.style.display = 'none'; var o = document.getElementById('fx-ohlc'); if (o) o.innerHTML = '&nbsp;'; }
+  document.addEventListener('touchstart', function (e) { if (e.target.closest && e.target.closest('#fx-svg')) fxCross(e); }, { passive: true });
+  document.addEventListener('touchmove', function (e) { if (e.target.closest && e.target.closest('#fx-svg')) { fxCross(e); } }, { passive: true });
+  document.addEventListener('touchend', function (e) { if (e.target.closest && e.target.closest('#fx-svg')) setTimeout(fxCrossOff, 2500); }, { passive: true });
+  document.addEventListener('mousemove', function (e) { if (e.target.closest && e.target.closest('#fx-svg')) fxCross(e); });
+  document.addEventListener('mouseout', function (e) { if (e.target.closest && e.target.closest('#fx-svg')) fxCrossOff(); });
   // свечи из цен: rows [{ms, v}] по возрастанию, шаг bucketMs
   function fxCandles(rows, bucketMs, from) {
     var cs = [], prevC = null, i = 0;
     var before = rows.filter(function (r) { return r.ms < from; }); if (before.length) prevC = before[before.length - 1].v;
-    var inr = rows.filter(function (r) { return r.ms >= from; }); if (!inr.length) return prevC === null ? [] : [{ o: prevC, h: prevC, l: prevC, c: prevC }];
+    var inr = rows.filter(function (r) { return r.ms >= from; }); if (!inr.length) return prevC === null ? [] : [{ t: from, o: prevC, h: prevC, l: prevC, c: prevC }];
     var t0 = Math.floor(from / bucketMs) * bucketMs, end = inr[inr.length - 1].ms;
     for (var t = t0; t <= end; t += bucketMs) {
       var vs = []; while (i < inr.length && inr[i].ms < t + bucketMs) { vs.push(inr[i].v); i++; }
-      if (!vs.length) { if (prevC === null) continue; cs.push({ o: prevC, h: prevC, l: prevC, c: prevC }); continue; }
+      if (!vs.length) { if (prevC === null) continue; cs.push({ t: t, o: prevC, h: prevC, l: prevC, c: prevC }); continue; }
       var o = prevC === null ? vs[0] : prevC, h = Math.max.apply(0, vs), l = Math.min.apply(0, vs);
       h = Math.max(h, o); l = Math.min(l, o);
-      var c = vs[vs.length - 1]; cs.push({ o: o, h: h, l: l, c: c }); prevC = c;
+      var c = vs[vs.length - 1]; cs.push({ t: t, o: o, h: h, l: l, c: c }); prevC = c;
     }
     return cs;
   }
@@ -2423,7 +2486,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     return '<div class="fx"><div class="fxchips">' + Object.keys(FX_SRC).map(function (k) { return '<button type="button" data-act="fxs" data-id="' + k + '" aria-pressed="' + (k === FX.src) + '">' + FX_SRC[k] + '</button>'; }).join('') + '</div>' +
       '<div class="fxchips">' + Object.keys(FX_NAMES).map(function (k) { return '<button type="button" data-act="fxc" data-id="' + k + '" aria-pressed="' + (k === FX.code) + '">' + k + '</button>'; }).join('') + '</div>' +
       '<div class="fxlbl">' + srcName + ' · ' + nm[0] + '</div><div class="fxbig num">' + fxFmt(inf.cur, f) + badge + '</div><div class="fxlbl">' + sub + '</div>' +
-      fxChart(cs, f) + (note ? '<div class="fxnote">' + note + '</div>' : '') +
+      fxChart(cs, f, FX.code + '/KGS · ' + srcName) + (note ? '<div class="fxnote">' + note + '</div>' : '') +
       '<div class="fxper">' + FX_PER.map(function (p, i) { return '<button type="button" data-act="fxp" data-id="' + i + '" aria-pressed="' + (i === FX.pi) + '">' + p[0] + '</button>'; }).join('') + '</div>' +
       '<div class="fxconv"><div class="fxf"><div style="flex:1;min-width:0"><label for="fx-amt">Отдаю</label><input id="fx-amt" class="num" inputmode="decimal" value="' + esc(amt) + '"></div><b class="cur">' + a + '</b></div>' +
       '<div class="fxf"><div style="flex:1;min-width:0"><label>Получаю</label><input id="fx-out" class="num" readonly tabindex="-1" value="' + fxConv() + '"></div><b class="cur">' + b + '</b></div>' +
@@ -2753,7 +2816,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   function render() {
     var active = document.activeElement, focusId = active && active.id, selStart = null, selEnd = null;
     try { if (active && active.selectionStart !== undefined) { selStart = active.selectionStart; selEnd = active.selectionEnd; } } catch (e) { }
-    var scroll = window.scrollY, html;
+    var scroll = window.scrollY, html, oldChat = document.getElementById('chat-list'), chatTop = oldChat ? oldChat.scrollTop : null;
     if (S.phase === 'boot') html = '';
     else if (S.phase === 'error') html = viewError();
     else if (S.phase === 'login') html = viewLogin();
@@ -2775,6 +2838,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       if (f) { f.focus(); try { if (selStart !== null) f.setSelectionRange(selStart, selEnd); } catch (e) { } }
     }
     window.scrollTo(0, scroll);
+    var nc = document.getElementById('chat-list'); if (nc && chatTop !== null && !S.enter && !S.chatToEnd) nc.scrollTop = chatTop;
     afterRender();
   }
   function afterRender() {
@@ -2870,6 +2934,41 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     document.addEventListener('focusout', function (e) { if (e.target && e.target.id === 'chat-input') document.body.classList.remove('typing'); });
     // tapping «send» must not close the keyboard
     document.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('.composer .send, .mchips button')) e.preventDefault(); });
+    // свайп от левого края = назад (как в iPhone)
+    (function () {
+      var sx = 0, sy = 0, st = 0, on = false;
+      function back() {
+        if (S.phase !== 'app') return false;
+        if (S.modal) { closeModal(); return true; }
+        if (S.stkOpen) { S.stkOpen = false; render(); return true; }
+        if (S.sub) { S.sub = null; S.enter = true; window.scrollTo(0, 0); render(); return true; }
+        if (S.tab !== 'home') { S.tab = 'home'; S.sub = null; S.enter = true; window.scrollTo(0, 0); render(); return true; }
+        return false;
+      }
+      document.addEventListener('touchstart', function (e) { var t = e.touches[0]; on = e.touches.length === 1 && t.clientX < 30; sx = t.clientX; sy = t.clientY; st = Date.now(); }, { passive: true });
+      document.addEventListener('touchend', function (e) {
+        if (!on) return; on = false;
+        var t = e.changedTouches[0], dx = t.clientX - sx, dy = Math.abs(t.clientY - sy);
+        if (dx > 70 && dx > dy * 1.6 && Date.now() - st < 700) back();
+      }, { passive: true });
+    })();
+    // клавиша «Отправить» на клавиатуре iPhone
+    document.addEventListener('keydown', function (e) {
+      if (e.target && e.target.id === 'chat-input' && (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        var fm = e.target.form; if (fm) { if (fm.requestSubmit) fm.requestSubmit(); else fm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+      }
+    });
+    // размер видимой области (когда открыта клавиатура)
+    (function () {
+      var vv = window.visualViewport; if (!vv) return;
+      function sync() {
+        var d = document.documentElement.style;
+        d.setProperty('--vvh', vv.height + 'px'); d.setProperty('--vvt', vv.offsetTop + 'px');
+        if (document.body.classList.contains('typing')) { var cl = document.getElementById('chat-list'); if (window.scrollY) window.scrollTo(0, 0); if (cl && cl.dataset.stick !== '0') cl.scrollTop = cl.scrollHeight; }
+      }
+      vv.addEventListener('resize', sync); vv.addEventListener('scroll', sync); sync();
+    })();
     await API.init();
     API.subscribe(function () { if (S.phase === 'app' || S.phase === 'pending') reloadSoon(); });
     if (!API.hasToken()) return toLogin();
@@ -3138,7 +3237,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       case 'tab': {
         var nt = t.getAttribute('data-tab');
         if (nt !== S.tab) { S.sub = null; S.tab = nt; S.enter = true; window.scrollTo(0, 0); render(); }
-        else window.scrollTo({ top: nt === 'chat' ? document.documentElement.scrollHeight : 0, behavior: 'smooth' });
+        else if (nt === 'chat') { var cl = document.getElementById('chat-list'); if (cl) cl.scrollTo({ top: cl.scrollHeight, behavior: 'smooth' }); } else window.scrollTo({ top: 0, behavior: 'smooth' });
         if (nt === 'chat') loadChat();
         break;
       }
