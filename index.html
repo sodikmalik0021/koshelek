@@ -947,6 +947,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   #app.tab-chat .chat > :first-child { margin-top: auto; }
   #app.tab-chat .composer { position: relative; bottom: auto; flex: none; margin: 6px 0 18px; }
 }
+.showpw{display:flex;align-items:center;gap:8px;margin:8px 0 12px;font-size:14px;color:var(--ink-soft)}.showpw input{width:auto;min-height:0;margin:0}
 </style>
 <div id="splash" aria-live="polite" aria-label="PIPO"><!--PIPO-SPLASH-HTML-->
   <video class="pp-vid" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
@@ -1566,9 +1567,10 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     if (S.loginTab === 'login') {
       h += '<form data-form="login" autocomplete="on">' +
         '<label for="l-login">Логин</label><input id="l-login" name="username" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" value="' + esc(draft('l-login', '')) + '" required>' +
-        '<label for="l-pass">Пароль</label><input id="l-pass" name="password" type="password" maxlength="72" autocomplete="current-password" value="' + esc(draft('l-pass', '')) + '" required>' +
+        '<label for="l-pass">Пароль</label><input id="l-pass" name="password" type="password" maxlength="72" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + esc(draft('l-pass', '')) + '" required>' +
+        '<label class="showpw"><input type="checkbox" data-showpw="l-pass"> Показать пароль</label>' +
         '<button class="btn full" type="submit">Войти</button></form>' +
-        '<p class="muted small" style="margin-top:12px">Забыли пароль? Попросите главного администратора сбросить его.</p>';
+        '<p class="muted small" style="margin-top:12px">Логин пишется маленькими буквами, без пробелов. Забыли пароль? Попросите главного администратора: Участники → «Сбросить пароль».</p>';
     } else {
       h += '<p class="muted">Заполните поля. После этого главный администратор подтвердит вас, и кошелёк откроется.</p>' + registerForm(false);
     }
@@ -2996,6 +2998,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     if (el.id === 'm-check') { var ok = document.getElementById('m-ok'); if (ok) ok.disabled = !el.checked; }
   });
 
+  document.addEventListener('change', function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute('data-showpw')) { var f = document.getElementById(t.getAttribute('data-showpw')); if (f) f.type = t.checked ? 'text' : 'password'; } });
   document.addEventListener('submit', async function (ev) {
     var form = ev.target.getAttribute('data-form');
     if (!form) return;
@@ -3033,7 +3036,11 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     if (form === 'login') {
       var lg = val('l-login').trim(), pw = val('l-pass');
       if (!lg || !pw) return toast('Введите логин и пароль.', true);
-      var okl = await run(function () { return API.login(lg, pw); }, null);
+      var okl = await run(function () { return API.login(lg, pw).catch(function (e) {
+        // iPhone иногда добавляет пробел в конце пароля: пробуем без пробелов по краям
+        if (pw !== pw.trim() && pw.trim()) return API.login(lg, pw.trim());
+        throw e;
+      }); }, null);
       if (okl) { clearDrafts(['l-login', 'l-pass']); render(); }
     }
 
