@@ -190,7 +190,7 @@ nav.bottom button.on { color: var(--lake); font-weight: 700; }
 nav.bottom button.on::before { content: ""; position: absolute; top: 0; width: 34px; height: 3px; background: var(--saffron); border-radius: 0 0 3px 3px; }
 nav.bottom .badge {
   position: absolute; top: 7px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
-  background: var(--bad); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  background: var(--bad); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
 
 /* ---------- popup ---------- */
@@ -280,7 +280,7 @@ nav.bottom .badge { background: var(--pink); }
   color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 3px 8px rgba(91,43,217,.22); }
 .ava.md { width: 38px; height: 38px; font-size: 16px; }
 .ava.sm { width: 30px; height: 30px; font-size: 13px; box-shadow: none; }
-.ava.xs { width: 20px; height: 20px; font-size: 11px; box-shadow: none; margin-right: 6px; }
+.ava.xs { width: 20px; height: 20px; font-size: 12px; box-shadow: none; margin-right: 6px; }
 .ava.c0 { background: linear-gradient(135deg, #6a2cf0, #9b35e0); }
 .ava.c1 { background: linear-gradient(135deg, #ff3d8b, #ff7a59); }
 .ava.c2 { background: linear-gradient(135deg, #12c2e9, #3b82f6); }
@@ -303,7 +303,7 @@ nav.bottom .badge { background: var(--pink); }
 .quick button:nth-child(4) .qi { background: linear-gradient(135deg, #dcf7ea, #ccf2e2); color: var(--good); }
 .quick svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .qb { position: absolute; top: -6px; right: -9px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px; background: var(--pink);
-  color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+  color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
 
 .countdown { display: block; width: 100%; border: 0; text-align: left; cursor: pointer; color: #fff; border-radius: 22px; padding: 16px 16px 14px;
   margin-bottom: 10px; position: relative; overflow: hidden; font: inherit;
@@ -363,7 +363,7 @@ nav.bottom .badge { background: var(--pink); }
   background: #fff; color: var(--ink); box-shadow: 0 2px 8px rgba(91,43,217,.09); white-space: pre-wrap; word-break: break-word; max-width: 100%; margin: 0; }
 .brow:not(.me) .bubble { border-bottom-left-radius: 7px; }
 .brow.me .bubble { background: linear-gradient(135deg, #6a2cf0, #b02fd6); color: #fff; border-bottom-right-radius: 7px; max-width: 80%; box-shadow: 0 4px 12px rgba(106,44,240,.25); }
-.bubble .t { display: inline-block; font-size: 11px; opacity: .62; margin-left: 9px; position: relative; top: 3px; white-space: nowrap; }
+.bubble .t { display: inline-block; font-size: 12px; opacity: .62; margin-left: 9px; position: relative; top: 3px; white-space: nowrap; }
 .bubble.deleted, .brow.me .bubble.deleted { background: transparent; color: var(--ink-soft); box-shadow: none; border: 1.5px dashed #d4c8f5; }
 .bubble .gone { font-style: italic; }
 button.bubble { cursor: pointer; }
@@ -372,6 +372,7 @@ button.bubble:active { filter: brightness(.96); }
   margin-top: 12px; background: #fff; border-radius: 999px; padding: 6px 6px 6px 18px; box-shadow: 0 8px 24px rgba(91,43,217,.20); }
 .composer input { flex: 1; border: 0; background: transparent; font-size: 16px; padding: 9px 0; min-width: 0; min-height: 0; box-shadow: none; }
 .composer input:focus { outline: none; box-shadow: none; border: 0; }
+.composer:focus-within { box-shadow: 0 0 0 2px var(--violet); }
 .send { width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, #6a2cf0, #ff3d8b); box-shadow: 0 4px 12px rgba(255,61,139,.35); }
 .send svg { width: 20px; height: 20px; fill: currentColor; }
@@ -413,7 +414,7 @@ nav.bottom button { font-size: 11.5px; }
 .cdl-label { font-size: 13px; font-weight: 600; opacity: .75; }
 .cdl-digits { display: flex; align-items: flex-end; gap: 3px; font-variant-numeric: tabular-nums; }
 .cdl-digits b { font-size: 24px; line-height: 1; font-weight: 800; }
-.cdl-digits small { font-size: 11px; opacity: .6; margin: 0 5px 2px 1px; font-weight: 600; }
+.cdl-digits small { font-size: 12px; opacity: .6; margin: 0 5px 2px 1px; font-weight: 600; }
 .cdl-foot { margin-top: 8px; font-size: 13px; opacity: .85; font-weight: 500; text-align: left; }
 
 /* ================= огоньки ================= */
@@ -523,7 +524,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .goal-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7c3aed, #ec4899, #f59e0b); transition: width .9s cubic-bezier(.2,.8,.2,1); position: relative; }
 .goal-bar i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.5) 50%, transparent 70%); background-size: 200% 100%; animation: goalShine 2.6s linear infinite; }
 @keyframes goalShine { from { background-position: 200% 0; } to { background-position: -100% 0; } }
-.goal-marks { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+.goal-marks { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
 .goal-done { text-align: center; font-weight: 800; font-size: 17px; padding: 6px 0 2px; }
 .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .presets button { border: 1.5px solid rgba(124,58,237,.35); background: transparent; color: var(--violet); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
@@ -540,8 +541,8 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .fx .fxbig{font-weight:800;font-size:52px;line-height:1;letter-spacing:-.02em;color:var(--lake-deep);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .fx .fxbadge{font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;letter-spacing:0}
 .fx .fxbadge.dn{background:var(--bad-bg);color:var(--bad)}.fx .fxbadge.up{background:var(--good-bg);color:var(--good)}
-.fxdark{padding:12px 6px 6px 12px}.fxdark .fxtt{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:13px}.fxdark .fxtt b{color:#fff;font-size:14px}.fxdark .fxtt .u{color:#3fbf6f;font-weight:600}.fxdark .fxtt .d{color:#e5484d;font-weight:600}.fxdark .fxtt em{margin-left:auto;font-style:normal;color:#8d8d94;font-size:11px;padding-right:6px}.fxdark .fxohlc{font-size:10.5px;color:#9a9aa2;min-height:15px;margin:2px 0 2px;padding-right:6px}.fxdark .fxohlc b{color:#e8e8ea;font-weight:600}.fxdark svg{touch-action:pan-y}
-.fxdark{background:#131315;border-radius:16px;padding:10px 6px 6px 10px;color:#e8e8ea}.fxdark .fxlg{font-size:11px;color:#cfcfd4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.fxdark .fxlg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px}.fxdark svg{width:100%;height:auto;display:block}.fxdark text{fill:#8d8d94;font-size:9.5px}
+.fxdark{padding:12px 6px 6px 12px}.fxdark .fxtt{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:13px}.fxdark .fxtt b{color:#fff;font-size:14px}.fxdark .fxtt .u{color:#3fbf6f;font-weight:600}.fxdark .fxtt .d{color:#e5484d;font-weight:600}.fxdark .fxtt em{margin-left:auto;font-style:normal;color:#8d8d94;font-size:12px;padding-right:6px}.fxdark .fxohlc{font-size:11.5px;color:#9a9aa2;min-height:15px;margin:2px 0 2px;padding-right:6px}.fxdark .fxohlc b{color:#e8e8ea;font-weight:600}.fxdark svg{touch-action:pan-y}
+.fxdark{background:#131315;border-radius:16px;padding:10px 6px 6px 10px;color:#e8e8ea}.fxdark .fxlg{font-size: 12px;color:#cfcfd4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.fxdark .fxlg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px}.fxdark svg{width:100%;height:auto;display:block;max-height:380px}.fxdark{max-width:640px}.fxdark text{fill:#8d8d94;font-size:9.5px}
 .fx .fxchart text{fill:var(--ink-soft);font-size:10px}
 .fx .fxconv{position:relative;border:1px solid var(--line);border-radius:18px;padding:4px 14px}
 .fx .fxf{display:flex;align-items:center;gap:10px;padding:8px 0}
@@ -554,11 +555,11 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .simcard .ppbrand{display:flex;align-items:center;gap:10px}.simcard .ppbrand b{font-size:22px;font-weight:800;letter-spacing:.04em;color:#fff}
 .simcard .pplogo{width:40px;height:40px;border-radius:11px;display:block;box-shadow:0 4px 12px rgba(20,8,70,.35)}
 .simcard .usd{font-size:15px;font-weight:700;margin-top:2px;opacity:.95}.simcard .usd small{font-weight:500;opacity:.75;font-size:12px}
-.pflip{perspective:1200px;margin:2px 0 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative;height:246px}
-.pflip .pcard{position:absolute;inset:0;border-radius:22px;padding:18px 20px;color:#fff;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .7s cubic-bezier(.4,.2,.2,1);box-shadow:0 18px 36px -14px rgba(42,18,115,.7),inset 0 0 0 1px rgba(255,255,255,.18);display:flex;flex-direction:column;font-family:inherit}
+.pflip{margin:2px 0 14px;max-width:460px;width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative;height:246px}
+.pflip .pcard{position:absolute;inset:0;border-radius:22px;padding:18px 20px;color:#fff;overflow:hidden;transition:transform .28s ease-in;transform:rotateY(0) translateZ(0);box-shadow:0 18px 36px -14px rgba(42,18,115,.7),inset 0 0 0 1px rgba(255,255,255,.18);display:flex;flex-direction:column;font-family:inherit}
 .pfront{background:radial-gradient(90% 90% at 55% 45%,#6c3bb8 0%,#3b1a78 45%,#1c0a45 100%)}
-.pback{transform:rotateY(180deg);background:linear-gradient(135deg,#3a2162 0%,#252648 50%,#142230 100%)}
-.pflip.on .pfront{transform:rotateY(-180deg)}.pflip.on .pback{transform:rotateY(0)}
+.pflip .pback{display:none}.pback{background:linear-gradient(135deg,#3a2162 0%,#252648 50%,#142230 100%)}
+.pflip.on .pfront{display:none}.pflip.on .pback{display:flex}.pflip.turn .pcard{transform:rotateY(90deg) translateZ(0)}.pflip.turn2 .pcard{transform:rotateY(-90deg) translateZ(0);transition:none}
 .pc-wave{position:absolute;right:0;bottom:0;width:55%;height:100%;pointer-events:none}
 .pcard>*{position:relative;z-index:1}.pcard>.pc-wave{position:absolute}
 .pc-top{display:flex;justify-content:space-between;align-items:center}
@@ -806,6 +807,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
   #app > .topbar, #app > .backlink, #app > .msg.warn { column-span: all; }
   #app > h2 { break-after: avoid; }
   #app.tab-home > .simcard { margin-top: 8px; }
+  #app.tab-home.insub { column-count: 1; max-width: 860px; }
 }
 
 /* ---- медали и стикеры ---- */
@@ -816,7 +818,7 @@ html[data-theme="dark"] .refresh { color: #c4b5fd !important; }
 .achm:active .achm-i { transform: scale(.92); }
 .achm:not(.got) .achm-i { filter: none; }
 .achm-i svg, .achov-medal svg { width: 100%; height: 100%; display: block; }
-.achm-t { display: block; font-size: 11px; line-height: 1.2; }
+.achm-t { display: block; font-size: 12px; line-height: 1.2; }
 .achm:not(.got) .achm-t { color: var(--ink-soft); }
 .achov { position: fixed; inset: 0; z-index: 140; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(18,10,48,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: achFade .3s ease both; overflow: hidden; }
 .achov-card { position: relative; width: min(340px, 100%); text-align: center; padding: 26px 22px 20px; border-radius: 28px; background: var(--paper, #fff); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.4); animation: achCard .5s cubic-bezier(.2,1.2,.3,1) both; }
@@ -1558,7 +1560,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   function viewLogin() {
     var h = '<div class="login"><h1>PIPO</h1>';
     if (!S.hasAdmin) {
-      h += '<p class="muted">Добро пожаловать! Вы первый, поэтому станете <b>главным администратором</b>. Придумайте логин и пароль.</p>' + registerForm(true);
+      h += '<p class="muted">Добро пожаловать! Вы первый, поэтому станете <b>главным администратором</b>. Придумайте логин и пароль (от 8 символов).</p>' + registerForm(true);
       return h + '</div>';
     }
     h += '<div class="seg" role="tablist">' + [['login', 'Вход'], ['register', 'Я новый участник']].map(function (t) {
@@ -1594,7 +1596,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var unread = chatUnread();
     var back = (S.tab === 'history' || S.tab === 'expenses' || S.tab === 'payments') ? '<button class="backlink" data-act="tab" data-tab="home">‹ Главная</button>' : '';
     body = back + (S.live ? '' : '<div class="msg warn" style="margin-top:12px">Нет связи с интернетом. Показаны последние данные — изменения пока не сохранятся.</div>') + body;
-    return '<div id="app" class="' + (S.enter ? 'enter ' : '') + 'tab-' + S.tab + '">' +
+    return '<div id="app" class="' + (S.enter ? 'enter ' : '') + 'tab-' + S.tab + (S.sub ? ' insub' : '') + '">' +
       '<div class="topbar"><span class="hello"><small>Привет, ' + esc(firstName(c.me)) + '</small><b>' + esc(statusLine(c)) + '</b></span>' +
       '<span class="me-box"><span class="sync ' + (S.live ? '' : 'off') + '" title="' + (S.live ? 'На связи' : 'Нет связи, повторим позже') + '"></span><button class="ava-btn" data-act="myprofile" aria-label="Мой профиль">' + ava(c, c.me.id, 'md') + '</button><button class="refresh" data-act="reload" aria-label="Обновить" title="Обновить"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></span></div>' +
       body + '</div>' +
@@ -2768,7 +2770,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     }
     h += settingsHtml(c);
     h += '<h2>Ваш профиль</h2><div class="panel"><div><b>' + esc(c.me.full_name) + '</b></div><div class="muted">' + ROLE_NAME[c.me.role] + ' · логин: ' + esc(c.me.login || '') + '</div>' +
-      btn('Сменить пароль', 'chpass-open', '', 'full ghost') + btn('Выйти', 'logout', '', 'full ghost') + '</div>';
+      btn('Сменить пароль', 'chpass-open', '', 'full ghost') + btn('Выйти со всех других устройств', 'logoutall', '', 'full ghost') + btn('Выйти', 'logout', '', 'full ghost') + '</div>';
     if (S.showChPass) {
       h += '<div class="panel"><form data-form="chpass"><h3>Сменить пароль</h3>' +
         '<label for="cp-old">Старый пароль</label><input id="cp-old" type="password" maxlength="72" autocomplete="current-password" required>' +
@@ -2839,6 +2841,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       var f = document.getElementById(focusId);
       if (f) { f.focus(); try { if (selStart !== null) f.setSelectionRange(selStart, selEnd); } catch (e) { } }
     }
+    try { ROOT.querySelectorAll('input:not([enterkeyhint]):not([type=checkbox]):not([type=file]):not([type=hidden])').forEach(function (i) { i.setAttribute('enterkeyhint', i.type === 'search' ? 'search' : (i.type === 'password' || i.id === 'l-login' ? 'go' : 'done')); }); } catch (e) { }
     window.scrollTo(0, scroll);
     var nc = document.getElementById('chat-list'); if (nc && chatTop !== null && !S.enter && !S.chatToEnd) nc.scrollTop = chatTop;
     afterRender();
@@ -3048,7 +3051,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       var rn = val('r-name').trim(), rl = val('r-login').trim(), rp = val('r-pass'), rp2 = val('r-pass2');
       if (!rn) return toast('Введите своё имя.', true);
       if (!rl) return toast('Придумайте логин.', true);
-      if (rp.length < 6) return toast('Пароль должен быть не короче 6 символов.', true);
+      if (rp.length < 8) return toast('Пароль должен быть не короче 8 символов.', true);
       if (rp !== rp2) return toast('Пароли не совпадают. Введите ещё раз.', true);
       var first = !S.hasAdmin;
       var okr = await run(function () { return API.register(rl, rp, rn); },
@@ -3058,7 +3061,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
     if (form === 'chpass') {
       var po = val('cp-old'), pn = val('cp-new'), pn2 = val('cp-new2');
-      if (pn.length < 6) return toast('Новый пароль должен быть не короче 6 символов.', true);
+      if (pn.length < 8) return toast('Новый пароль должен быть не короче 8 символов.', true);
       if (pn !== pn2) return toast('Новые пароли не совпадают.', true);
       var okc = await run(function () { return API.rpc('change_password', { p_old_password: po, p_new_password: pn }); }, 'Пароль изменён.');
       if (okc) { clearDrafts(['cp-old', 'cp-new', 'cp-new2']); S.showChPass = false; render(); }
@@ -3233,7 +3236,9 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
 
     switch (act) {
       case 'reload': location.reload(); break;
-      case 'flip': if (ev.target.closest && ev.target.closest('.pc-copy')) break; S.flip = !S.flip; var fe = document.querySelector('.pflip'); if (fe) fe.classList.toggle('on', S.flip); break;
+      case 'flip': if (ev.target.closest && ev.target.closest('.pc-copy')) break; S.flip = !S.flip; var fe = document.querySelector('.pflip');
+        if (fe) { if (fe.dataset.busy) break; fe.dataset.busy = '1'; fe.classList.add('turn'); setTimeout(function () { fe.classList.remove('turn'); fe.classList.toggle('on', S.flip); fe.classList.add('turn2'); void fe.offsetWidth; fe.classList.remove('turn2'); delete fe.dataset.busy; }, 290); }
+        break;
       case 'sub': S.sub = id || null; window.scrollTo(0, 0); render(); break;
       case 'rc-paste': rcPaste(); break;
       case 'rc-show': rcShow(parseInt(id, 10)); break;
@@ -3349,6 +3354,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
         catch (e) { toast('Не получилось скопировать. Номер: ' + ((S.payInfo || {}).card || ''), true); }
         break;
 
+      case 'logoutall': run(function () { return API.rpc('logout_all', {}); }, 'Вы вышли на всех других устройствах.'); break;
       case 'logout':
         openModal({
           title: 'Выйти из кошелька?', confirm: 'Выйти', cls: 'bad',
@@ -3380,10 +3386,10 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
           title: 'Сбросить пароль?', confirm: 'Сбросить', cls: 'bad',
           body: '<p>Новый пароль для <b>' + esc(rpM.full_name) + '</b> (логин: ' + esc(rpM.login || '') + ').</p><p class="muted" style="margin-top:6px">Потом скажите другу этот пароль. Он сможет поменять его в разделе «Ещё».</p>',
           input: { label: 'Новый пароль (не короче 6 символов)', placeholder: '' },
-          validate: function (np) { return String(np || '').trim().length < 6 ? 'Пароль должен быть не короче 6 символов.' : ''; },
+          validate: function (np) { return String(np || '').trim().length < 8 ? 'Пароль должен быть не короче 8 символов.' : ''; },
           action: function (np) {
             np = String(np || '').trim();
-            if (np.length < 6) { toast('Пароль должен быть не короче 6 символов.', true); return; }
+            if (np.length < 8) { toast('Пароль должен быть не короче 8 символов.', true); return; }
             return run(function () { return API.rpc('reset_password', { p_id: rpM.id, p_new_password: np }); }, 'Пароль сброшен. Новый пароль: ' + np);
           }
         });
