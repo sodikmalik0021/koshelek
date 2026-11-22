@@ -540,6 +540,7 @@ html[data-theme="dark"] .modal-bg { background: rgba(5, 3, 20, .72); }
 .fx .fxbig{font-weight:800;font-size:52px;line-height:1;letter-spacing:-.02em;color:var(--lake-deep);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .fx .fxbadge{font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;letter-spacing:0}
 .fx .fxbadge.dn{background:var(--bad-bg);color:var(--bad)}.fx .fxbadge.up{background:var(--good-bg);color:var(--good)}
+.fxdark{background:#131315;border-radius:16px;padding:10px 6px 6px 10px;color:#e8e8ea}.fxdark .fxlg{font-size:11px;color:#cfcfd4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.fxdark .fxlg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px}.fxdark svg{width:100%;height:auto;display:block}.fxdark text{fill:#8d8d94;font-size:9.5px}
 .fx .fxchart text{fill:var(--ink-soft);font-size:10px}
 .fx .fxconv{position:relative;border:1px solid var(--line);border-radius:18px;padding:4px 14px}
 .fx .fxf{display:flex;align-items:center;gap:10px;padding:8px 0}
@@ -2300,7 +2301,7 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
   }
   // ---------------------------------------------------------------- exchange rates (NBKR)
   var FX_NAMES = { USD: ['Доллар США', '$', 2], EUR: ['Евро', '€', 2], RUB: ['Российский рубль', '₽', 3], KZT: ['Казахстанский тенге', '₸', 3], CNY: ['Китайский юань', '¥', 2] };
-  var FX_PER = [['48 ч', 4], ['1 нед', 8], ['1 мес', 31], ['6 мес', 186], ['12 мес', 366], ['5 лет', 1830]];
+  var FX_PER = [['48 ч', 2, 0], ['1 мес', 31, 1], ['3 мес', 92, 1], ['6 мес', 186, 2], ['12 мес', 366, 4], ['Всё', 1830, 7]];
   var FX = { code: 'USD', pi: 0, mode: 'kgs', src: 'obank', data: {}, bank: {}, loading: {}, at: {}, failed: false };
   var FX_SRC = { obank: 'О!Банк', eldik: 'Эльдик Банк', nbkr: 'НБКР' };
   function fxFmt(x, f) { return Number(x).toLocaleString('ru-RU', { minimumFractionDigits: f, maximumFractionDigits: f }); }
@@ -2310,19 +2311,53 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     API.rpcGet('fx', { p_code: code, p_days: 1830 }).then(function (r) { FX.data[code] = Array.isArray(r) ? r : []; FX.at[code] = Date.now(); FX.loading[code] = false; if (S.phase === 'app' && S.tab === 'home') render(); },
       function () { FX.loading[code] = false; FX.failed = true; });
   }
-  function fxChart(pts, f) {
-    var W = 320, H = 140, pad = 44, v = pts.map(function (p) { return p.v; }), mn = Math.min.apply(0, v), mx = Math.max.apply(0, v), sp = (mx - mn) || mx * 0.01 || 1;
-    mn -= sp * .15; mx += sp * .15;
-    var X = function (i) { return 2 + (W - pad - 2) * (pts.length < 2 ? 1 : i / (pts.length - 1)); }, Y = function (a) { return H - 6 - (H - 12) * (a - mn) / (mx - mn); };
-    var line = pts.length < 2 ? 'M2 ' + Y(v[0]).toFixed(1) + ' L' + (W - pad) + ' ' + Y(v[0]).toFixed(1) : 'M' + pts.map(function (p, i) { return X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' L');
-    var area = line + ' L' + (W - pad) + ' ' + H + ' L2 ' + H + ' Z', g = '';
-    for (var k = 0; k < 3; k++) { var gy = 6 + (H - 12) * k / 2; g += '<line x1="0" x2="' + (W - pad + 6) + '" y1="' + gy + '" y2="' + gy + '" stroke="var(--line)"/><text x="' + W + '" y="' + (gy + 4) + '" text-anchor="end">' + fxFmt(mx - (mx - mn) * k / 2, f) + '</text>'; }
-    return '<svg class="fxchart chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="График курса"><defs><linearGradient id="fxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".3"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs>' + g +
-      '<path d="' + area + '" fill="url(#fxg)"/><path d="' + line + '" fill="none" stroke="#5b2bd9" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="' + X(pts.length - 1).toFixed(1) + '" cy="' + Y(v[v.length - 1]).toFixed(1) + '" r="4.5" fill="#5b2bd9" stroke="var(--paper)" stroke-width="2"/></svg>';
+  // свечной график: cs = [{o,h,l,c}], две скользящие средние как на биржевых графиках
+  function fxMA(cl, n, ema) {
+    var out = [], k = 2 / (n + 1), prev = null;
+    for (var i = 0; i < cl.length; i++) {
+      if (ema) { prev = prev === null ? cl[i] : cl[i] * k + prev * (1 - k); out.push(prev); }
+      else { var a = Math.max(0, i - n + 1), sm = 0; for (var j = a; j <= i; j++) sm += cl[j]; out.push(sm / (i - a + 1)); }
+    }
+    return out;
+  }
+  function fxChart(cs, f) {
+    var W = 360, H = 230, pr = 46, bt = 6, n = cs.length;
+    if (!n) return '';
+    var hi = Math.max.apply(0, cs.map(function (x) { return x.h; })), lo = Math.min.apply(0, cs.map(function (x) { return x.l; })), sp = (hi - lo) || hi * 0.01 || 1;
+    hi += sp * .08; lo -= sp * .08;
+    var pw = W - pr, X = function (i) { return pw * (i + 0.5) / n; }, Y = function (v) { return bt + (H - bt * 2) * (hi - v) / (hi - lo); };
+    var bw = Math.max(1.2, Math.min(9, pw / n * 0.62)), g = '';
+    for (var k = 0; k < 5; k++) { var gy = bt + (H - bt * 2) * k / 4; g += '<line x1="0" x2="' + pw + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#2a2a2e" stroke-width="1"/><text x="' + (W - 2) + '" y="' + (gy + 3.5).toFixed(1) + '" text-anchor="end">' + fxFmt(hi - (hi - lo) * k / 4, f) + '</text>'; }
+    var cd = '';
+    cs.forEach(function (x, i) {
+      var up = x.c >= x.o, col = up ? '#3fbf6f' : '#e5484d', yo = Y(x.o), yc = Y(x.c), top = Math.min(yo, yc), hh = Math.max(1.2, Math.abs(yo - yc));
+      cd += '<line x1="' + X(i).toFixed(1) + '" x2="' + X(i).toFixed(1) + '" y1="' + Y(x.h).toFixed(1) + '" y2="' + Y(x.l).toFixed(1) + '" stroke="' + col + '" stroke-width="1"/><rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + hh.toFixed(1) + '" fill="' + col + '"/>';
+    });
+    var cl = cs.map(function (x) { return x.c; }), per = Math.min(20, Math.max(3, Math.round(n / 4)));
+    var line = function (arr, col) { return '<path d="M' + arr.map(function (v, i) { return X(i).toFixed(1) + ' ' + Y(v).toFixed(1); }).join(' L') + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-linejoin="round"/>'; };
+    var last = cl[n - 1], ly = Y(last);
+    return '<div class="fxdark"><div class="fxlg"><b>Ma (' + per + ', Ema)</b> <i style="background:#f1e65a"></i> <b>Ma (' + per + ')</b> <i style="background:#e5484d"></i></div>' +
+      '<svg class="fxchart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Свечной график курса">' + g + cd + line(fxMA(cl, per, true), '#f1e65a') + line(fxMA(cl, per, false), '#e5484d') +
+      '<line x1="0" x2="' + pw + '" y1="' + ly.toFixed(1) + '" y2="' + ly.toFixed(1) + '" stroke="#3fbf6f" stroke-dasharray="3 3" stroke-width="1"/><rect x="' + (pw + 1) + '" y="' + (ly - 8).toFixed(1) + '" width="' + (pr - 1) + '" height="16" rx="3" fill="' + (cs[n - 1].c >= cs[n - 1].o ? '#3fbf6f' : '#e5484d') + '"/><text x="' + (W - 2) + '" y="' + (ly + 3.5).toFixed(1) + '" text-anchor="end" style="fill:#fff;font-weight:700">' + fxFmt(last, f) + '</text></svg></div>';
+  }
+  // свечи из цен: rows [{ms, v}] по возрастанию, шаг bucketMs
+  function fxCandles(rows, bucketMs, from) {
+    var cs = [], prevC = null, i = 0;
+    var before = rows.filter(function (r) { return r.ms < from; }); if (before.length) prevC = before[before.length - 1].v;
+    var inr = rows.filter(function (r) { return r.ms >= from; }); if (!inr.length) return prevC === null ? [] : [{ o: prevC, h: prevC, l: prevC, c: prevC }];
+    var t0 = Math.floor(from / bucketMs) * bucketMs, end = inr[inr.length - 1].ms;
+    for (var t = t0; t <= end; t += bucketMs) {
+      var vs = []; while (i < inr.length && inr[i].ms < t + bucketMs) { vs.push(inr[i].v); i++; }
+      if (!vs.length) { if (prevC === null) continue; cs.push({ o: prevC, h: prevC, l: prevC, c: prevC }); continue; }
+      var o = prevC === null ? vs[0] : prevC, h = Math.max.apply(0, vs), l = Math.min.apply(0, vs);
+      h = Math.max(h, o); l = Math.min(l, o);
+      var c = vs[vs.length - 1]; cs.push({ o: o, h: h, l: l, c: c }); prevC = c;
+    }
+    return cs;
   }
   function fxLoadBank(code) {
     var k = 'b' + code;
-    if (FX.loading[k] || (FX.bank[code] && Date.now() - (FX.at[k] || 0) < 120000)) return;
+    if (FX.loading[k] || (FX.bank[code] && Date.now() - (FX.at[k] || 0) < 40000)) return;
     FX.loading[k] = true;
     API.rpcGet('fx_banks', { p_code: code, p_days: 1830 }).then(function (r) { FX.bank[code] = r && typeof r === 'object' ? r : {}; FX.at[k] = Date.now(); FX.loading[k] = false; if (S.phase === 'app' && S.tab === 'home') render(); },
       function () { FX.loading[k] = false; FX.bank[code] = FX.bank[code] || {}; });
@@ -2335,20 +2370,28 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
       if (rows && rows.length) {
         var last = rows[rows.length - 1], prv = null;
         for (var i = rows.length - 2; i >= 0; i--) { if (Number(rows[i].s) !== Number(last.s)) { prv = rows[i]; break; } }
-        var from = Date.now() - FX_PER[FX.pi][1] * 864e5 * (FX.pi === 0 ? 0.5 : 1);
-        var pts = rows.filter(function (r) { return Date.parse(r.t) >= from; }).map(function (r) { return { v: Number(r.s) }; });
-        var before = rows.filter(function (r) { return Date.parse(r.t) < from; }); if (before.length) pts.unshift({ v: Number(before[before.length - 1].s) });
-        pts.push({ v: Number(last.s) });
-        return { bank: true, buy: Number(last.b), sell: Number(last.s), cur: Number(last.s), prev: prv ? Number(prv.s) : null, pts: pts, upd: last.t };
+        var per = FX_PER[FX.pi], from = Date.now() - per[1] * 864e5, bms = per[2] ? per[2] * 864e5 : 36e5;
+        var rr = rows.map(function (r) { return { ms: Date.parse(r.t), v: Number(r.s) }; }); rr.push({ ms: Date.now(), v: Number(last.s) });
+        var cs = fxCandles(rr, bms, from), distinct = {}; rr.filter(function (r) { return r.ms >= from; }).forEach(function (r) { distinct[r.v] = 1; });
+        if (Object.keys(distinct).length >= 3 && cs.length >= 3) return { bank: true, buy: Number(last.b), sell: Number(last.s), cur: Number(last.s), prev: prv ? Number(prv.s) : null, cs: cs, upd: last.t };
+        FX.thin = true;
+        var dd = FX.data[code], mk = null;
+        if (dd && dd.length) { mk = fxMarket(dd, per[0] === '48 ч' ? [14, 1] : [per[1], per[2]]); }
+        return { bank: true, buy: Number(last.b), sell: Number(last.s), cur: Number(last.s), prev: prv ? Number(prv.s) : null, cs: mk || [], upd: last.t, thin: true };
       }
     }
     var d = FX.data[code];
     if (d && d.length) {
-      var c = d[d.length - 1], pv = d.length > 1 ? d[d.length - 2] : null, today = Date.parse(c.d + 'T00:00:00Z'), fr = today - (FX_PER[FX.pi][1] - 1) * 864e5;
-      var pp = d.filter(function (r) { return Date.parse(r.d + 'T00:00:00Z') >= fr; }).map(function (r) { return { v: Number(r.v) }; });
-      return { bank: false, buy: Number(c.v), sell: Number(c.v), cur: Number(c.v), prev: pv ? Number(pv.v) : null, pts: pp.length ? pp : [{ v: Number(c.v) }], upd: c.d };
+      var c = d[d.length - 1], pv = d.length > 1 ? d[d.length - 2] : null, per = FX_PER[FX.pi];
+      var mk2 = fxMarket(d, per[0] === '48 ч' ? [14, 1] : [per[1], per[2]]);
+      return { bank: false, buy: Number(c.v), sell: Number(c.v), cur: Number(c.v), prev: pv ? Number(pv.v) : null, cs: mk2, upd: c.d, thin: per[0] === '48 ч' };
     }
     return null;
+  }
+  function fxMarket(d, pb) {
+    var rows = d.map(function (r) { return { ms: Date.parse(r.d + 'T12:00:00Z'), v: Number(r.v) }; });
+    var end = rows[rows.length - 1].ms, from = end - (pb[0] - 1) * 864e5 - 432e5;
+    return fxCandles(rows, Math.max(1, pb[1]) * 864e5, from);
   }
   function fxConv(raw) {
     var inf = fxInfo(FX.code), src = raw !== undefined ? raw : (S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt']),
@@ -2357,11 +2400,16 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var rate = FX.mode === 'kgs' ? inf.sell : inf.buy; // buying currency costs the bank's sell rate, selling it gets the buy rate
     return fxFmt(FX.mode === 'kgs' ? a / (rate || 1) : a * rate, 2);
   }
+  setInterval(function () {
+    if (S.phase !== 'app' || S.tab !== 'home' || S.sub !== 'fx' || document.hidden || S.modal) return;
+    if (document.activeElement && document.activeElement.id === 'fx-amt') return;
+    FX.at['b' + FX.code] = 0; fxLoadBank(FX.code);
+  }, 45000);
   function fxHtml() {
     fxLoad(FX.code); fxLoadBank(FX.code);
     var inf = fxInfo(FX.code);
     if (!inf) return FX.failed ? '' : '<div class="fx"><div class="fxlbl">Загружаю курс…</div></div>';
-    var nm = FX_NAMES[FX.code], f = nm[2], pts = inf.pts;
+    var nm = FX_NAMES[FX.code], f = nm[2], cs = inf.cs;
     var dlt = inf.prev != null ? inf.cur - inf.prev : 0, badge = inf.prev != null && Math.abs(dlt) >= Math.pow(10, -f) / 2 ? '<span class="fxbadge ' + (dlt < 0 ? 'dn' : 'up') + '">' + (dlt < 0 ? '▼ ' : '▲ ') + fxFmt(Math.abs(dlt), f) + '</span>' : '';
     var a = FX.mode === 'kgs' ? 'сом' : nm[1], b = FX.mode === 'kgs' ? nm[1] : 'сом';
     var amt = S.drafts['fx-amt'] === undefined ? (FX.mode === 'kgs' ? '10000' : '100') : S.drafts['fx-amt'];
@@ -2369,12 +2417,13 @@ html[data-theme="dark"] .chat-top { background: rgba(20,14,44,.9); }
     var sub = inf.bank ? 'продажа · покупка ' + fxFmt(inf.buy, f) + ' · сом за 1 ' + nm[1] : 'сом за 1 ' + nm[1] + ' · официальный курс';
     var note = '';
     if (FX.src !== 'nbkr' && !inf.bank) note = 'Курс банка ещё загружается, пока показан официальный курс НБКР.';
+    else if (inf.thin) note = 'Курс банка в реальном времени копится: на графике пока дневные свечи рыночного курса. Как только банк меняет курс, свечи 48 ч оживут.';
     else if (inf.bank && inf.prev == null) note = 'Банк пока не менял курс. Рост и падение появятся, как только он его изменит.';
-    else if (!inf.bank) note = 'НБКР меняет курс редко, иногда по нескольку дней он стоит на месте.';
+    else if (!inf.bank) note = 'Свечи построены по дневным значениям курса.';
     return '<div class="fx"><div class="fxchips">' + Object.keys(FX_SRC).map(function (k) { return '<button type="button" data-act="fxs" data-id="' + k + '" aria-pressed="' + (k === FX.src) + '">' + FX_SRC[k] + '</button>'; }).join('') + '</div>' +
       '<div class="fxchips">' + Object.keys(FX_NAMES).map(function (k) { return '<button type="button" data-act="fxc" data-id="' + k + '" aria-pressed="' + (k === FX.code) + '">' + k + '</button>'; }).join('') + '</div>' +
       '<div class="fxlbl">' + srcName + ' · ' + nm[0] + '</div><div class="fxbig num">' + fxFmt(inf.cur, f) + badge + '</div><div class="fxlbl">' + sub + '</div>' +
-      fxChart(pts, f) + (note ? '<div class="fxnote">' + note + '</div>' : '') +
+      fxChart(cs, f) + (note ? '<div class="fxnote">' + note + '</div>' : '') +
       '<div class="fxper">' + FX_PER.map(function (p, i) { return '<button type="button" data-act="fxp" data-id="' + i + '" aria-pressed="' + (i === FX.pi) + '">' + p[0] + '</button>'; }).join('') + '</div>' +
       '<div class="fxconv"><div class="fxf"><div style="flex:1;min-width:0"><label for="fx-amt">Отдаю</label><input id="fx-amt" class="num" inputmode="decimal" value="' + esc(amt) + '"></div><b class="cur">' + a + '</b></div>' +
       '<div class="fxf"><div style="flex:1;min-width:0"><label>Получаю</label><input id="fx-out" class="num" readonly tabindex="-1" value="' + fxConv() + '"></div><b class="cur">' + b + '</b></div>' +
