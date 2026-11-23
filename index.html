@@ -1084,6 +1084,8 @@ a:focus-visible, summary:focus-visible, [data-act]:focus-visible, [role="button"
     mine.forEach(function (c) {
       var left = c.amount;
       totalApproved += c.amount;
+      // Взнос с пометкой «долг» (старый долг до программы) в недельные сроки не засчитывается
+      if (/^\s*(старый\s+)?долг/i.test(c.note || '')) left = 0;
       while (left > 0 && wi < weeks.length) {
         var w = weeks[wi];
         if (w.marked) { wi++; continue; }
